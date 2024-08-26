@@ -72,7 +72,7 @@ CREATE TABLE colaborador (
     quantidade_empresas_trabalhou INT,
     quantidade_anos_trabalhados_anteriormente INT,
     nivel_escolaridade_id INT,
-    acoes TEXT,
+    ex_funcionario BOOL,
     FOREIGN KEY (genero_id) REFERENCES genero(id),
     FOREIGN KEY (estado_civil_id) REFERENCES estado_civil(id),
     FOREIGN KEY (formacao_id) REFERENCES formacao(id),

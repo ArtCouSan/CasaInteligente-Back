@@ -1,52 +1,42 @@
 from . import db
 
 class Genero(db.Model):
-    __tablename__ = 'genero'
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(50), nullable=False)
 
 class EstadoCivil(db.Model):
-    __tablename__ = 'estado_civil'
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(50), nullable=False)
 
 class Formacao(db.Model):
-    __tablename__ = 'formacao'
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(255), nullable=False)
 
 class Faculdade(db.Model):
-    __tablename__ = 'faculdade'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255), nullable=False)
 
 class Departamento(db.Model):
-    __tablename__ = 'departamento'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
 
 class Setor(db.Model):
-    __tablename__ = 'setor'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
 
 class FaixaSalarial(db.Model):
-    __tablename__ = 'faixa_salarial'
-    id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(50), nullable=False)
-
-class NivelEscolaridade(db.Model):
-    __tablename__ = 'nivel_escolaridade'
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(50), nullable=False)
 
 class Cargo(db.Model):
-    __tablename__ = 'cargo'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
 
+class NivelEscolaridade(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    descricao = db.Column(db.String(50), nullable=False)
+
 class Colaborador(db.Model):
-    __tablename__ = 'colaborador'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255), nullable=False)
     cpf = db.Column(db.String(14), nullable=False, unique=True)
@@ -73,20 +63,30 @@ class Colaborador(db.Model):
     quantidade_empresas_trabalhou = db.Column(db.Integer)
     quantidade_anos_trabalhados_anteriormente = db.Column(db.Integer)
     nivel_escolaridade_id = db.Column(db.Integer, db.ForeignKey('nivel_escolaridade.id'))
-    acoes = db.Column(db.Text)
-    
+    ex_funcionario = db.Column(db.Boolean, default=False)
+
+    genero = db.relationship('Genero', backref='colaboradores')
+    estado_civil = db.relationship('EstadoCivil', backref='colaboradores')
+    formacao = db.relationship('Formacao', backref='colaboradores')
+    faculdade = db.relationship('Faculdade', backref='colaboradores')
+    departamento = db.relationship('Departamento', backref='colaboradores')
+    setor = db.relationship('Setor', backref='colaboradores')
+    faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
+    cargo = db.relationship('Cargo', backref='colaboradores')
+    nivel_escolaridade = db.relationship('NivelEscolaridade', backref='colaboradores')
+
     def to_dict(self):
         return {
             'id': self.id,
             'nome': self.nome,
             'cpf': self.cpf,
             'idade': self.idade,
-            'genero_id': self.genero_id,
-            'estado_civil_id': self.estado_civil_id,
+            'genero': {'id': self.genero.id, 'descricao': self.genero.descricao},
+            'estadoCivil': {'id': self.estado_civil.id, 'descricao': self.estado_civil.descricao},
             'telefone': self.telefone,
             'email': self.email,
-            'formacao_id': self.formacao_id,
-            'faculdade_id': self.faculdade_id,
+            'formacao': {'id': self.formacao.id, 'descricao': self.formacao.descricao},
+            'faculdade': {'id': self.faculdade.id, 'nome': self.faculdade.nome},
             'endereco': self.endereco,
             'numero': self.numero,
             'complemento': self.complemento,
@@ -94,23 +94,34 @@ class Colaborador(db.Model):
             'cidade': self.cidade,
             'estado': self.estado,
             'cep': self.cep,
-            'departamento_id': self.departamento_id,
-            'setor_id': self.setor_id,
-            'faixa_salarial_id': self.faixa_salarial_id,
-            'cargo_id': self.cargo_id,
+            'departamento': {'id': self.departamento.id, 'nome': self.departamento.nome},
+            'setor': {'id': self.setor.id, 'nome': self.setor.nome},
+            'faixaSalarial': {'id': self.faixa_salarial.id, 'descricao': self.faixa_salarial.descricao},
+            'cargo': {'id': self.cargo.id, 'nome': self.cargo.nome},
             'gerente': self.gerente,
-            'tempo_trabalho': self.tempo_trabalho,
-            'quantidade_empresas_trabalhou': self.quantidade_empresas_trabalhou,
-            'quantidade_anos_trabalhados_anteriormente': self.quantidade_anos_trabalhados_anteriormente,
-            'nivel_escolaridade_id': self.nivel_escolaridade_id,
-            'acoes': self.acoes
+            'tempoTrabalho': self.tempo_trabalho,
+            'quantidadeEmpresasTrabalhou': self.quantidade_empresas_trabalhou,
+            'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
+            'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
+            'exFuncionario': self.ex_funcionario,
         }
-    
-class ColaboradorPredicao(db.Model):
+
+class AnaliseColaborador(db.Model):
     __tablename__ = 'colaborador_predicao'
     id = db.Column(db.Integer, primary_key=True)
-    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id', ondelete='CASCADE'))
-    predicao = db.Column(db.Integer)
-    motivo = db.Column(db.Text)
-    sugestao = db.Column(db.Text)
-    observacao = db.Column(db.Text)
+    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id'), nullable=False)
+    predicao = db.Column(db.Integer, nullable=False)
+    motivo = db.Column(db.Text, nullable=False)
+    sugestao = db.Column(db.Text, nullable=False)
+    observacao = db.Column(db.Text, nullable=True)
+
+    colaborador = db.relationship('Colaborador', backref='analises', lazy=True)
+
+    def to_dict(self):
+        return {
+            'colaborador': self.colaborador.to_dict(),
+            'motivo': self.motivo,
+            'predicao': self.predicao,
+            'sugestao': self.sugestao,
+            'observacao': self.observacao
+        }

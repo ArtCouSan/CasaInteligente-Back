@@ -24,7 +24,7 @@ INSERT INTO colaborador (
     quantidade_empresas_trabalhou, 
     quantidade_anos_trabalhados_anteriormente, 
     nivel_escolaridade_id, 
-    acoes
+    ex_funcionario
 ) VALUES (
     'João Silva',                        -- Nome
     '123.456.789-00',                    -- CPF
@@ -51,5 +51,19 @@ INSERT INTO colaborador (
     3,                                   -- Quantidade de Empresas Trabalhou
     8,                                   -- Quantidade de Anos Trabalhados Anteriormente
     2,                                   -- Nível de Escolaridade (2: Ensino Superior Completo)
-    'Promovido a Desenvolvedor Sênior'   -- Ações
+    0   -- Ex funcionario
+);
+
+INSERT INTO colaborador_predicao (
+    colaborador_id,
+    predicao,
+    motivo,
+    sugestao,
+    observacao
+) VALUES (
+    1,                     -- ID do colaborador recém-criado
+    85,                                  -- Predição (exemplo de predição)
+    'Alta chance de promoção devido ao excelente desempenho.',  -- Motivo
+    'Considerar promoção para a posição de Gerente de Projeto.', -- Sugestão
+    'Observação adicional sobre o colaborador.'                -- Observação
 );
