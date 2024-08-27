@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from .models import db, Colaborador, AnaliseColaborador
+from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Setor, db, Colaborador, AnaliseColaborador
 
 bp = Blueprint('colaborador', __name__)
 
@@ -138,3 +138,48 @@ def delete_analise_colaborador(id):
     db.session.delete(analise)
     db.session.commit()
     return jsonify({'message': 'Análise excluída com sucesso!'}), 200
+
+@bp.route('/generos', methods=['GET'])
+def listar_generos():
+    generos = Genero.query.all()
+    return jsonify([genero.to_dict() for genero in generos])
+
+@bp.route('/estados-civis', methods=['GET'])
+def listar_estados_civis():
+    estados_civis = EstadoCivil.query.all()
+    return jsonify([estado_civil.to_dict() for estado_civil in estados_civis])
+
+@bp.route('/niveis-escolaridade', methods=['GET'])
+def listar_niveis_escolaridade():
+    niveis_escolaridade = NivelEscolaridade.query.all()
+    return jsonify([nivel_escolaridade.to_dict() for nivel_escolaridade in niveis_escolaridade])
+
+@bp.route('/faculdades', methods=['GET'])
+def listar_faculdades():
+    faculdades = Faculdade.query.all()
+    return jsonify([faculdade.to_dict() for faculdade in faculdades])
+
+@bp.route('/formacoes', methods=['GET'])
+def listar_formacoes():
+    formacoes = Formacao.query.all()
+    return jsonify([formacao.to_dict() for formacao in formacoes])
+
+@bp.route('/departamentos', methods=['GET'])
+def listar_departamentos():
+    departamentos = Departamento.query.all()
+    return jsonify([departamento.to_dict() for departamento in departamentos])
+
+@bp.route('/setores', methods=['GET'])
+def listar_setores():
+    setores = Setor.query.all()
+    return jsonify([setor.to_dict() for setor in setores])
+
+@bp.route('/cargos', methods=['GET'])
+def listar_cargos():
+    cargos = Cargo.query.all()
+    return jsonify([cargo.to_dict() for cargo in cargos])
+
+@bp.route('/faixas-salariais', methods=['GET'])
+def listar_faixas_salariais():
+    faixas_salariais = FaixaSalarial.query.all()
+    return jsonify([faixa_salarial.to_dict() for faixa_salarial in faixas_salariais])

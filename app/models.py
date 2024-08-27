@@ -4,37 +4,91 @@ class Genero(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(50), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'descricao': self.descricao
+        }
+
 class EstadoCivil(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'descricao': self.descricao
+        }
 
 class Formacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(255), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'descricao': self.descricao
+        }
+
 class Faculdade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome
+        }
 
 class Departamento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome
+        }
+
 class Setor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome
+        }
 
 class FaixaSalarial(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(50), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'descricao': self.descricao
+        }
+
 class Cargo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome
+        }
+
 class NivelEscolaridade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descricao = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'descricao': self.descricao
+        }
 
 class Colaborador(db.Model):
     id = db.Column(db.Integer, primary_key=True)
