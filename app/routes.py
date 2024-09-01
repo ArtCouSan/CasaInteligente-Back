@@ -1,9 +1,12 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request
 from pymysql import IntegrityError
+
+from app.serivces.upload_colaborador_service import processar_csv
 from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Resposta, Setor, db, Colaborador, AnaliseColaborador
 from bson import ObjectId
 from . import mongo 
-from app.chat.chat_service import fazer_pergunta
+from app.chat.chat_service import fazer_pergunta, gerar_contexto_colaborador, gerar_nova_sugestao_ia, gerar_novo_motivo_ia
+from flask import send_file
 
 bp = Blueprint('colaborador', __name__)
 
@@ -296,3 +299,71 @@ def add_message(colaborador_id):
         'text': bot_response, 
         'sender': 'bot'
     }), 201
+
+@bp.route('/analise-colaborador/<int:colaborador_id>/gerar-novo-motivo', methods=['POST'])
+def gerar_novo_motivo(colaborador_id):
+
+    colaborador = AnaliseColaborador.query.filter_by(colaborador_id=colaborador_id).first()
+
+    if not colaborador:
+        return jsonify({'error': 'Colaborador não encontrado'}), 404
+    
+    novo_motivo = gerar_novo_motivo_ia(colaborador_id)
+
+    colaborador.motivo = novo_motivo
+    db.session.commit()
+
+    return jsonify({
+        'success': 'Motivo atualizado com sucesso',
+        'novo_motivo': novo_motivo
+    }), 200
+
+@bp.route('/analise-colaborador/<int:colaborador_id>/gerar-nova-sugestao', methods=['POST'])
+def gerar_nova_sugestao(colaborador_id):
+
+    colaborador = AnaliseColaborador.query.filter_by(colaborador_id=colaborador_id).first()
+
+    if not colaborador:
+        return jsonify({'error': 'Colaborador não encontrado'}), 404
+    
+    nova_sugestao = gerar_nova_sugestao_ia(colaborador_id)
+
+    colaborador.sugestao = nova_sugestao
+    db.session.commit()
+
+    return jsonify({
+        'success': 'Sugestao atualizada com sucesso',
+        'nova_sugestao': nova_sugestao
+    }), 200
+
+@bp.route('/colaborador/upload', methods=['POST'])
+def upload_colaboradores():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
+    
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'Nenhum arquivo foi selecionado'}), 400
+    
+    if file and file.filename.endswith('.csv'):
+        try:
+            resultado = processar_csv(file)
+            return jsonify({'message': resultado}), 200
+        except Exception as e:
+            return jsonify({'error': f'Erro ao processar o arquivo: {str(e)}'}), 500
+    else:
+        return jsonify({'error': 'Tipo de arquivo não permitido, apenas CSVs são aceitos'}), 400
+    
+@bp.route('/download-template', methods=['GET'])
+def download_template():
+    filepath = '../app/templates/colaborador.csv'
+
+    with open(filepath, 'r', encoding='utf-8') as file:
+        data = file.read()
+
+    response = Response(
+        data,
+        mimetype='text/csv; charset=utf-8',
+        headers={"Content-disposition": "attachment; filename=template_colaboradores.csv"}
+    )

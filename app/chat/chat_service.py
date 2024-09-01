@@ -6,6 +6,7 @@ from openai import OpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from app import mongo
+from app.models import AnaliseColaborador, Colaborador
 
 # Carrega a chave da API a partir do arquivo JSON
 with open('config.json', 'r') as file:
@@ -49,14 +50,61 @@ def fazer_pergunta(query, colaborador_id, num_messages=5):
 
     # Concatenar o contexto das mensagens recentes e dos documentos relevantes
     full_context = f"{recent_messages_context} {faiss_context}"
-
-    print(recent_messages_context)
     
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "Você é um assistente de perguntas e respostas. Seu objetivo é responder perguntas com a maior precisão possível com base nas instruções e no contexto fornecido. Responda sempre em português."},
             {"role": "user", "content": f"Contexto: {full_context} Pergunta: {query}"}
+        ],
+        max_tokens=150,
+        temperature=0.5
+    )
+
+    return completion.choices[0].message.content
+
+
+def gerar_contexto_colaborador(colaborador_id):
+    # Recuperar o colaborador pelo ID
+    colaborador = Colaborador.query.get(colaborador_id)
+    if not colaborador:
+        raise ValueError("Colaborador não encontrado")
+
+    # Recuperar análises preditivas do colaborador
+    analises = AnaliseColaborador.query.filter_by(colaborador_id=colaborador_id).all()
+
+    # Criar o dicionário de contexto
+    contexto = {
+        'colaborador': colaborador.to_dict_somente_dados(),
+        'analises': [analise.to_dict_predicao() for analise in analises],
+        'respostas': [resposta.to_dict() for resposta in colaborador.respostas]
+    }
+
+    return contexto
+
+def gerar_novo_motivo_ia(colaborador_id):
+    contexto = gerar_contexto_colaborador(colaborador_id)
+
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Com base nos dados de colaborador, porcentagem de chance de saida e pesquisa de clima, responda o motivo do colaborador estar saindo, sem a sugestao. Responda sempre em português."},
+            {"role": "user", "content": f"Contexto: {contexto}"}
+        ],
+        max_tokens=150,
+        temperature=0.5
+    )
+
+    return completion.choices[0].message.content
+
+def gerar_nova_sugestao_ia(colaborador_id):
+    contexto = gerar_contexto_colaborador(colaborador_id)
+
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Com base nos dados de colaborador, porcentagem de chance de saida e pesquisa de clima, responda sugestoes para evitar do colaborador estar sair, sem o motivo. Responda sempre em português."},
+            {"role": "user", "content": f"Contexto: {contexto}"}
         ],
         max_tokens=150,
         temperature=0.5

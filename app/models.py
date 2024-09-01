@@ -161,6 +161,37 @@ class Colaborador(db.Model):
             'exFuncionario': self.ex_funcionario,
             'respostas': [resposta.to_dict() for resposta in self.respostas]  # Inclui as respostas relacionadas
         }
+    
+    def to_dict_somente_dados(self):
+        return {
+            'nome': self.nome,
+            'cpf': self.cpf,
+            'idade': self.idade,
+            'genero': {'id': self.genero.id, 'descricao': self.genero.descricao},
+            'estadoCivil': {'id': self.estado_civil.id, 'descricao': self.estado_civil.descricao},
+            'telefone': self.telefone,
+            'email': self.email,
+            'formacao': {'id': self.formacao.id, 'descricao': self.formacao.descricao},
+            'faculdade': {'id': self.faculdade.id, 'nome': self.faculdade.nome},
+            'endereco': self.endereco,
+            'numero': self.numero,
+            'complemento': self.complemento,
+            'bairro': self.bairro,
+            'cidade': self.cidade,
+            'estado': self.estado,
+            'cep': self.cep,
+            'departamento': {'id': self.departamento.id, 'nome': self.departamento.nome},
+            'setor': {'id': self.setor.id, 'nome': self.setor.nome},
+            'faixaSalarial': {'id': self.faixa_salarial.id, 'descricao': self.faixa_salarial.descricao},
+            'cargo': {'id': self.cargo.id, 'nome': self.cargo.nome},
+            'gerente': self.gerente,
+            'tempoTrabalho': self.tempo_trabalho,
+            'quantidadeEmpresasTrabalhou': self.quantidade_empresas_trabalhou,
+            'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
+            'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
+            'exFuncionario': self.ex_funcionario,
+        }
+
 
 class AnaliseColaborador(db.Model):
     __tablename__ = 'colaborador_predicao'
@@ -181,6 +212,15 @@ class AnaliseColaborador(db.Model):
             'sugestao': self.sugestao,
             'observacao': self.observacao
         }
+    
+    def to_dict_predicao(self):
+        return {
+            'motivo': self.motivo,
+            'predicao': self.predicao,
+            'sugestao': self.sugestao,
+            'observacao': self.observacao
+        }
+    
     
 class Pergunta(db.Model):
     __tablename__ = 'pergunta'
