@@ -94,3 +94,20 @@ CREATE TABLE colaborador_predicao (
     observacao TEXT,
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+CREATE TABLE pergunta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    texto VARCHAR(255) NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE resposta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    colaborador_id INT NOT NULL,
+    pergunta_id INT NOT NULL,
+    nota TINYINT NOT NULL,
+    trimestre ENUM('Q1', 'Q2', 'Q3', 'Q4') NOT NULL,
+    ano YEAR NOT NULL,
+    FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE,
+    FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE,
+    UNIQUE (colaborador_id, pergunta_id, trimestre, ano)
+) ENGINE=InnoDB;

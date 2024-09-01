@@ -1,5 +1,9 @@
 from flask import Blueprint, jsonify, request
-from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Setor, db, Colaborador, AnaliseColaborador
+from pymysql import IntegrityError
+from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Resposta, Setor, db, Colaborador, AnaliseColaborador
+from bson import ObjectId
+from . import mongo 
+from app.chat.chat_service import fazer_pergunta
 
 bp = Blueprint('colaborador', __name__)
 
@@ -89,7 +93,6 @@ def delete_colaborador(id):
     db.session.delete(colaborador)
     db.session.commit()
     return jsonify({'message': 'Colaborador excluído com sucesso!'}), 200
-
 
 @bp.route('/analise-colaboradores', methods=['GET'])
 def get_analises_colaboradores():
@@ -183,3 +186,113 @@ def listar_cargos():
 def listar_faixas_salariais():
     faixas_salariais = FaixaSalarial.query.all()
     return jsonify([faixa_salarial.to_dict() for faixa_salarial in faixas_salariais])
+
+# Rota para listar todas as perguntas
+@bp.route('/perguntas', methods=['GET'])
+def get_perguntas():
+    perguntas = Pergunta.query.all()
+    return jsonify([pergunta.to_dict(include_respostas=False) for pergunta in perguntas])
+
+# Rota para adicionar uma nova pergunta
+@bp.route('/pergunta', methods=['POST'])
+def create_pergunta():
+    data = request.get_json()
+    pergunta = Pergunta(
+        texto=data.get('texto')
+    )
+    db.session.add(pergunta)
+    db.session.commit()
+    return jsonify(pergunta.to_dict()), 201
+
+# Rota para listar todas as respostas de um colaborador
+@bp.route('/colaborador/<int:colaborador_id>/respostas', methods=['GET'])
+def get_respostas(colaborador_id):
+    respostas = Resposta.query.filter_by(colaborador_id=colaborador_id).all()
+    return jsonify([resposta.to_dict() for resposta in respostas])
+
+# Rota para adicionar uma resposta de um colaborador a uma pergunta
+@bp.route('/colaborador/<int:colaborador_id>/resposta', methods=['POST'])
+def create_or_update_resposta(colaborador_id):
+    data = request.get_json()
+
+    # Tente encontrar uma resposta existente com a mesma combinação de colaborador, pergunta, trimestre e ano
+    resposta_existente = Resposta.query.filter_by(
+        colaborador_id=colaborador_id,
+        pergunta_id=data['pergunta_id'],
+        trimestre=data['trimestre'],
+        ano=data['ano']
+    ).first()
+
+    if resposta_existente:
+        # Se a resposta existir, atualize a nota
+        resposta_existente.nota = data['nota']
+        db.session.commit()
+        return jsonify(resposta_existente.to_dict()), 200
+    else:
+        try:
+            # Se não existir, crie uma nova resposta
+            nova_resposta = Resposta(
+                colaborador_id=colaborador_id,
+                pergunta_id=data['pergunta_id'],
+                nota=data['nota'],
+                trimestre=data['trimestre'],
+                ano=data['ano']
+            )
+            db.session.add(nova_resposta)
+            db.session.commit()
+            return jsonify(nova_resposta.to_dict()), 201
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({"message": "Erro ao tentar criar a resposta."}), 400
+
+# Rota para atualizar uma resposta existente
+@bp.route('/resposta/<int:id>', methods=['PUT'])
+def update_resposta(id):
+    resposta = Resposta.query.get_or_404(id)
+    data = request.get_json()
+
+    resposta.nota = data.get('nota', resposta.nota)
+    resposta.trimestre = data.get('trimestre', resposta.trimestre)
+    resposta.ano = data.get('ano', resposta.ano)
+
+    db.session.commit()
+    return jsonify(resposta.to_dict())
+
+# Rota para deletar uma resposta
+@bp.route('/resposta/<int:id>', methods=['DELETE'])
+def delete_resposta(id):
+    resposta = Resposta.query.get_or_404(id)
+    db.session.delete(resposta)
+    db.session.commit()
+    return jsonify({'message': 'Resposta excluída com sucesso!'}), 200
+
+@bp.route('/colaborador/<int:colaborador_id>/messages', methods=['GET'])
+def get_messages(colaborador_id):
+    messages = mongo.db.messages.find({'colaborador_id': colaborador_id})
+    return jsonify([{'_id': str(ObjectId(msg['_id'])), 'text': msg['text'], 'sender': msg['sender']} for msg in messages])
+
+@bp.route('/colaborador/<int:colaborador_id>/messages', methods=['POST'])
+def add_message(colaborador_id):
+    data = request.get_json()
+    
+    # Salvar mensagem do usuário
+    user_message_id = mongo.db.messages.insert_one({
+        'text': data['text'], 
+        'colaborador_id': colaborador_id,
+        'sender': 'user'
+    }).inserted_id
+    
+    # Gerar e salvar resposta do bot
+    bot_response = fazer_pergunta(data['text'], colaborador_id)
+    bot_message_id = mongo.db.messages.insert_one({
+        'text': bot_response, 
+        'colaborador_id': colaborador_id,
+        'sender': 'bot'
+    }).inserted_id
+    
+    # Retornar a mensagem do bot para o frontend
+    return jsonify({
+        '_id': str(ObjectId(bot_message_id)), 
+        'text': bot_response, 
+        'sender': 'bot'
+    }), 201

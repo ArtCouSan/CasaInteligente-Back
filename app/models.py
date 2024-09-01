@@ -128,6 +128,7 @@ class Colaborador(db.Model):
     faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
     cargo = db.relationship('Cargo', backref='colaboradores')
     nivel_escolaridade = db.relationship('NivelEscolaridade', backref='colaboradores')
+    respostas = db.relationship("Resposta", back_populates="colaborador")  # Relação bidirecional
 
     def to_dict(self):
         return {
@@ -158,6 +159,7 @@ class Colaborador(db.Model):
             'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
             'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
             'exFuncionario': self.ex_funcionario,
+            'respostas': [resposta.to_dict() for resposta in self.respostas]  # Inclui as respostas relacionadas
         }
 
 class AnaliseColaborador(db.Model):
@@ -178,4 +180,44 @@ class AnaliseColaborador(db.Model):
             'predicao': self.predicao,
             'sugestao': self.sugestao,
             'observacao': self.observacao
+        }
+    
+class Pergunta(db.Model):
+    __tablename__ = 'pergunta'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    texto = db.Column(db.String(255), nullable=False)
+
+    respostas = db.relationship("Resposta", back_populates="pergunta")
+
+    def to_dict(self, include_respostas=False):
+        data = {
+            'id': self.id,
+            'texto': self.texto,
+        }
+        if include_respostas:
+            data['respostas'] = [resposta.to_dict() for resposta in self.respostas]
+        return data
+
+class Resposta(db.Model):
+    __tablename__ = 'resposta'
+    
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id'), nullable=False)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id'), nullable=False)
+    nota = db.Column(db.Integer, nullable=False)
+    trimestre = db.Column(db.Enum('Q1', 'Q2', 'Q3', 'Q4'), nullable=False)
+    ano = db.Column(db.Integer, nullable=False)
+
+    colaborador = db.relationship("Colaborador", back_populates="respostas")
+    pergunta = db.relationship("Pergunta", back_populates="respostas")
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'colaborador_id': self.colaborador_id,
+            'pergunta_id': self.pergunta_id,
+            'nota': self.nota,
+            'trimestre': self.trimestre,
+            'ano': self.ano,
+            'pergunta_texto': self.pergunta.texto if self.pergunta else None
         }
