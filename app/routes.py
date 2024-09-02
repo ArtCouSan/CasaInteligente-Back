@@ -7,6 +7,7 @@ from bson import ObjectId
 from . import mongo 
 from app.chat.chat_service import fazer_pergunta, gerar_contexto_colaborador, gerar_nova_sugestao_ia, gerar_novo_motivo_ia
 from flask import send_file
+import os
 
 bp = Blueprint('colaborador', __name__)
 
@@ -357,13 +358,12 @@ def upload_colaboradores():
     
 @bp.route('/download-template', methods=['GET'])
 def download_template():
-    filepath = '../app/templates/colaborador.csv'
-
-    with open(filepath, 'r', encoding='utf-8') as file:
-        data = file.read()
-
-    response = Response(
-        data,
-        mimetype='text/csv; charset=utf-8',
-        headers={"Content-disposition": "attachment; filename=template_colaboradores.csv"}
-    )
+    # Ajusta o caminho para ser absoluto
+    filepath = os.path.abspath(os.path.join('app', 'templates', 'colaborador.csv'))
+    
+    # Verifica se o arquivo existe
+    if not os.path.exists(filepath):
+        return {"error": "Template file not found"}, 404
+    
+    # Retorna o arquivo para download
+    return send_file(filepath, as_attachment=True, download_name='colaborador.csv', mimetype='text/csv')

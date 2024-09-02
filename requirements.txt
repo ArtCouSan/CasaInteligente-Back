@@ -10,3 +10,6 @@ tiktoken==0.7.0
 faiss-cpu
 langchain-openai
 pandas
+transformers 
+torch 
+sentence-transformers
