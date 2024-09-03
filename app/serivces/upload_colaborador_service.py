@@ -1,12 +1,14 @@
-from sentence_transformers import SentenceTransformer, util
+from transformers import AutoTokenizer, AutoModel
+import torch
 import pandas as pd
 from werkzeug.utils import secure_filename
 import os
 from app import db
 from app.models import Cargo, Colaborador, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Setor
 
-# Carregar o modelo de embeddings
-model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+# Carregar o modelo BERT e o tokenizer
+tokenizer = AutoTokenizer.from_pretrained('neuralmind/bert-base-portuguese-cased')
+model = AutoModel.from_pretrained('neuralmind/bert-base-portuguese-cased')
 
 UPLOAD_FOLDER = 'uploads/'
 
@@ -25,8 +27,8 @@ sinonimos_estado_civil = {
     'Casado': ['Casado(a)', 'Casado']
 }
 
-sinonimos_formacao = {
-    'Ensino Superior - Completo': ['Ensino Superior', 'Graduação'],
+sinonimos_nivel_escolaridade = {
+    'Ensino Superior - Completo': ['Ensino Superior', 'Graduação', 'Superior Completo'],
     'Ensino Superior - Incompleto': ['Ensino Superior Incompleto']
 }
 
@@ -34,20 +36,47 @@ sinonimos_departamento = {
     'Tecnologia da Informação': ['TI', 'Informática']
 }
 
+sinonimos_formacao = {
+    'Engenharia de Software': ['Engenharia de Software', 'Engenharia de SW'],
+    'Ciências da Computação': ['Ciências da Computação', 'Computação']
+}
+
+sinonimos_faculdade = {
+    'Universidade XYZ': ['Universidade XYZ', 'Uni XYZ']
+}
+
+sinonimos_cargo = {
+    'Desenvolvedor Sênior': ['Desenvolvedor Sênior', 'Dev Sênior'],
+    'Analista de Dados': ['Analista de Dados', 'Data Analyst']
+}
+
 def calcular_similaridade(descricao, candidatos):
     """Calcula a similaridade semântica entre a descrição e uma lista de candidatos."""
-    descricao_embedding = model.encode(descricao, convert_to_tensor=True)
-    candidatos_embeddings = model.encode(candidatos, convert_to_tensor=True)
-    similaridades = util.pytorch_cos_sim(descricao_embedding, candidatos_embeddings)
-    maior_similaridade, indice = similaridades.max(dim=1)
-    
-    return candidatos[indice] if maior_similaridade.item() > 0.8 else descricao  # Ajuste o threshold conforme necessário
+    descricao_tokens = tokenizer(descricao, return_tensors='pt')
+    descricao_embedding = model(**descricao_tokens).last_hidden_state.mean(dim=1)
 
-def normalizar_descricao(descricao, sinonimos, model):
+    candidatos_embeddings = []
+    for candidato in candidatos:
+        candidato_tokens = tokenizer(candidato, return_tensors='pt')
+        candidato_embedding = model(**candidato_tokens).last_hidden_state.mean(dim=1)
+        candidatos_embeddings.append(candidato_embedding)
+    
+    candidatos_embeddings = torch.stack(candidatos_embeddings).squeeze()
+    
+    similaridades = torch.nn.functional.cosine_similarity(descricao_embedding, candidatos_embeddings)
+    maior_similaridade, indice = similaridades.max(dim=0)
+    
+    return candidatos[indice] if maior_similaridade.item() > 0.8 else descricao
+
+def normalizar_descricao(descricao, sinonimos):
     """Normaliza a descrição baseada nos sinônimos fornecidos utilizando similaridade semântica."""
+    for chave, sinonimos_lista in sinonimos.items():
+        if descricao in sinonimos_lista:
+            return chave
+    
     candidatos = list(sinonimos.keys())
     descricao_normalizada = calcular_similaridade(descricao, candidatos)
-    return descricao_normalizada if descricao_normalizada in sinonimos else descricao
+    return descricao_normalizada
 
 def parse_faixa_salarial(descricao):
     """Extrai o valor mínimo e máximo de uma faixa salarial a partir da descrição."""
@@ -80,11 +109,15 @@ def processar_csv(file):
 
         for index, row in df.iterrows():
             # Normalizar descrições usando os embeddings
-            row['genero'] = normalizar_descricao(row['genero'], sinonimos_genero, model)
-            row['estadoCivil'] = normalizar_descricao(row['estadoCivil'], sinonimos_estado_civil, model)
-            row['formacao'] = normalizar_descricao(row['formacao'], sinonimos_formacao, model)
-            row['departamento'] = normalizar_descricao(row['departamento'], sinonimos_departamento, model)
-            
+            row['genero'] = normalizar_descricao(row['genero'], sinonimos_genero)
+            row['estadoCivil'] = normalizar_descricao(row['estadoCivil'], sinonimos_estado_civil)
+            row['nivelEscolaridade'] = normalizar_descricao(row['nivelEscolaridade'], sinonimos_nivel_escolaridade)
+            row['departamento'] = normalizar_descricao(row['departamento'], sinonimos_departamento)
+            row['formacao'] = normalizar_descricao(row['formacao'], sinonimos_formacao)
+            row['faculdade'] = normalizar_descricao(row['faculdade'], sinonimos_faculdade)
+            row['cargo'] = normalizar_descricao(row['cargo'], sinonimos_cargo)
+
+            # Verificar e aplicar as normalizações antes das consultas
             genero = Genero.query.filter_by(descricao=row['genero']).first() or Genero(descricao=row['genero'])
             estado_civil = EstadoCivil.query.filter_by(descricao=row['estadoCivil']).first() or EstadoCivil(descricao=row['estadoCivil'])
             formacao = Formacao.query.filter_by(descricao=row['formacao']).first() or Formacao(descricao=row['formacao'])

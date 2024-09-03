@@ -208,6 +208,55 @@ def create_pergunta():
     db.session.commit()
     return jsonify(pergunta.to_dict()), 201
 
+# Rota para atualizar uma pergunta existente
+@bp.route('/pergunta/<int:id>', methods=['PUT'])
+def update_pergunta(id):
+    pergunta = Pergunta.query.get_or_404(id)
+    data = request.get_json()
+
+    pergunta.texto = data.get('texto', pergunta.texto)
+
+    db.session.commit()
+    return jsonify(pergunta.to_dict())
+
+# Rota para deletar uma pergunta
+@bp.route('/pergunta/<int:id>', methods=['DELETE'])
+def delete_pergunta(id):
+    pergunta = Pergunta.query.get_or_404(id)
+    db.session.delete(pergunta)
+    db.session.commit()
+    return jsonify({'message': 'Pergunta excluída com sucesso!'}), 200
+
+# Rota para upload de CSV de perguntas
+# @bp.route('/upload-perguntas', methods=['POST'])
+# def upload_perguntas():
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
+    
+#     file = request.files['file']
+
+#     if file.filename == '':
+#         return jsonify({'error': 'Nenhum arquivo foi selecionado'}), 400
+    
+#     if file and file.filename.endswith('.csv'):
+#         try:
+#             resultado = processar_csv_pergunta(file)
+#             return jsonify({'message': resultado}), 200
+#         except Exception as e:
+#             return jsonify({'error': f'Erro ao processar o arquivo: {str(e)}'}), 500
+#     else:
+#         return jsonify({'error': 'Tipo de arquivo não permitido, apenas CSVs são aceitos'}), 400
+
+# Rota para download de um template CSV de perguntas
+@bp.route('/download-template-perguntas', methods=['GET'])
+def download_template_perguntas():
+    filepath = os.path.abspath(os.path.join('app', 'templates', 'pergunta.csv'))
+    
+    if not os.path.exists(filepath):
+        return {"error": "Template file not found"}, 404
+    
+    return send_file(filepath, as_attachment=True, download_name='pergunta.csv', mimetype='text/csv')
+
 # Rota para listar todas as respostas de um colaborador
 @bp.route('/colaborador/<int:colaborador_id>/respostas', methods=['GET'])
 def get_respostas(colaborador_id):

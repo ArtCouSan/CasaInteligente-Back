@@ -32,9 +32,9 @@ INSERT INTO formacao (descricao) VALUES
 ('Administração');
 
 INSERT INTO departamento (nome) VALUES 
-('TI'),
+('Tecnologia da Informação'),
 ('Financeiro'),
-('RH');
+('Rercursos Humanos');
 
 INSERT INTO setor (nome) VALUES 
 ('Desenvolvimento'),
