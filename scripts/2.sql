@@ -45,6 +45,11 @@ CREATE TABLE cargo (
     nome VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE perfil (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
 CREATE TABLE colaborador (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
@@ -54,6 +59,7 @@ CREATE TABLE colaborador (
     estado_civil_id INT,
     telefone VARCHAR(20),
     email VARCHAR(255),
+    senha_hash VARCHAR(255) NOT NULL,
     formacao_id INT,
     faculdade_id INT,
     endereco VARCHAR(255) NOT NULL,
@@ -84,6 +90,13 @@ CREATE TABLE colaborador (
     FOREIGN KEY (nivel_escolaridade_id) REFERENCES nivel_escolaridade(id)
 ) ENGINE=InnoDB;
 
+CREATE TABLE colaborador_perfil (
+    colaborador_id INT,
+    perfil_id INT,
+    PRIMARY KEY (colaborador_id, perfil_id),
+    FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE,
+    FOREIGN KEY (perfil_id) REFERENCES perfil(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 CREATE TABLE colaborador_predicao (
     id INT AUTO_INCREMENT PRIMARY KEY,

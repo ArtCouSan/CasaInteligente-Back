@@ -82,3 +82,8 @@ INSERT INTO pergunta (texto) VALUES
 ('Quão satisfeito você está com seu trabalho atual?'),
 ('Como você avalia sua satisfação com os relacionamentos profissionais que você tem na empresa (com colegas, supervisores, etc.)?'),
 ('Quão satisfeito você está com o equilíbrio entre sua vida profissional e pessoal?');
+
+INSERT INTO perfil(nome) VALUES
+('colaborador'),
+('dp'),
+('desenvolvedor')

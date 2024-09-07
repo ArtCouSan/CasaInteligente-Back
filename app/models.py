@@ -1,4 +1,5 @@
 from . import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Genero(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -118,6 +119,7 @@ class Colaborador(db.Model):
     quantidade_anos_trabalhados_anteriormente = db.Column(db.Integer)
     nivel_escolaridade_id = db.Column(db.Integer, db.ForeignKey('nivel_escolaridade.id'))
     ex_funcionario = db.Column(db.Boolean, default=False)
+    senha_hash = db.Column(db.String(255), nullable=False)
 
     genero = db.relationship('Genero', backref='colaboradores')
     estado_civil = db.relationship('EstadoCivil', backref='colaboradores')
@@ -128,7 +130,9 @@ class Colaborador(db.Model):
     faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
     cargo = db.relationship('Cargo', backref='colaboradores')
     nivel_escolaridade = db.relationship('NivelEscolaridade', backref='colaboradores')
-    respostas = db.relationship("Resposta", back_populates="colaborador")  # Relação bidirecional
+    respostas = db.relationship("Resposta", back_populates="colaborador")  # Relação bidirecional   
+    perfis = db.relationship('Perfil', secondary='colaborador_perfil', backref='colaboradores')
+
 
     def to_dict(self):
         return {
@@ -140,8 +144,6 @@ class Colaborador(db.Model):
             'estadoCivil': {'id': self.estado_civil.id, 'descricao': self.estado_civil.descricao},
             'telefone': self.telefone,
             'email': self.email,
-            'formacao': {'id': self.formacao.id, 'descricao': self.formacao.descricao},
-            'faculdade': {'id': self.faculdade.id, 'nome': self.faculdade.nome},
             'endereco': self.endereco,
             'numero': self.numero,
             'complemento': self.complemento,
@@ -149,6 +151,8 @@ class Colaborador(db.Model):
             'cidade': self.cidade,
             'estado': self.estado,
             'cep': self.cep,
+            'formacao': {'id': self.formacao.id, 'descricao': self.formacao.descricao},
+            'faculdade': {'id': self.faculdade.id, 'nome': self.faculdade.nome},
             'departamento': {'id': self.departamento.id, 'nome': self.departamento.nome},
             'setor': {'id': self.setor.id, 'nome': self.setor.nome},
             'faixaSalarial': {'id': self.faixa_salarial.id, 'descricao': self.faixa_salarial.descricao},
@@ -159,7 +163,7 @@ class Colaborador(db.Model):
             'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
             'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
             'exFuncionario': self.ex_funcionario,
-            'respostas': [resposta.to_dict() for resposta in self.respostas]  # Inclui as respostas relacionadas
+            'perfis': [perfil.to_dict() for perfil in self.perfis]  # Inclui os perfis associados
         }
     
     def to_dict_somente_dados(self):
@@ -190,8 +194,24 @@ class Colaborador(db.Model):
             'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
             'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
             'exFuncionario': self.ex_funcionario,
+            'respostas': [resposta.to_dict() for resposta in self.respostas] 
         }
-
+    
+class Perfil(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(50), nullable=False, unique=True)  # Ex: 'admin', 'colaborador', 'gerente'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome
+        }
+    
+class ColaboradorPerfil(db.Model):
+    __tablename__ = 'colaborador_perfil'
+    
+    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id'), primary_key=True)
+    perfil_id = db.Column(db.Integer, db.ForeignKey('perfil.id'), primary_key=True)
 
 class AnaliseColaborador(db.Model):
     __tablename__ = 'colaborador_predicao'

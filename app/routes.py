@@ -1,6 +1,6 @@
-from flask import Blueprint, Response, jsonify, request
-from pymysql import IntegrityError
-
+from flask import Blueprint, Response, jsonify, request, session
+from pymysql import IntegrityError 
+from werkzeug.security import check_password_hash
 from app.serivces.upload_colaborador_service import processar_csv
 from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Resposta, Setor, db, Colaborador, AnaliseColaborador
 from bson import ObjectId
@@ -416,3 +416,29 @@ def download_template():
     
     # Retorna o arquivo para download
     return send_file(filepath, as_attachment=True, download_name='colaborador.csv', mimetype='text/csv')
+
+@bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    cpf = data.get('cpf')
+    password = data.get('password')
+
+    colaborador = Colaborador.query.filter_by(cpf=cpf).first()
+
+    if colaborador is None:
+        return jsonify({"error": "Colaborador não encontrado"}), 404
+
+    if colaborador.senha_hash != password:
+        return jsonify({"error": "Credenciais inválidas"}), 401
+
+    perfis = colaborador.perfis
+    perfis_data = [perfil.to_dict() for perfil in perfis]
+
+    print(perfis_data)
+
+    return jsonify(colaborador.to_dict()), 200
+    
+@bp.route('/logout', methods=['POST'])
+def logout():
+    session.pop('colaborador_id', None)
+    return jsonify({"message": "Logged out successfully"}), 200
