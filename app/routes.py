@@ -1,8 +1,7 @@
-from flask import Blueprint, Response, jsonify, request, session
+from flask import Blueprint, jsonify, request, session
 from pymysql import IntegrityError 
-from werkzeug.security import check_password_hash
 from app.serivces.upload_colaborador_service import processar_csv
-from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Resposta, Setor, db, Colaborador, AnaliseColaborador
+from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Pesquisa, Resposta, Setor, db, Colaborador, AnaliseColaborador
 from bson import ObjectId
 from . import mongo 
 from app.chat.chat_service import fazer_pergunta, gerar_contexto_colaborador, gerar_nova_sugestao_ia, gerar_novo_motivo_ia
@@ -24,34 +23,37 @@ def get_colaborador(id):
 @bp.route('/colaborador', methods=['POST'])
 def create_colaborador():
     data = request.get_json()
+    
     colaborador = Colaborador(
-        nome=data.get('nome'),
-        cpf=data.get('cpf'),
-        idade=data.get('idade'),
-        genero_id=data.get('genero')['id'],
-        estado_civil_id=data.get('estadoCivil')['id'],
-        telefone=data.get('telefone'),
-        email=data.get('email'),
-        formacao_id=data.get('formacao')['id'],
-        faculdade_id=data.get('faculdade')['id'],
-        endereco=data.get('endereco'),
-        numero=data.get('numero'),
-        complemento=data.get('complemento'),
-        bairro=data.get('bairro'),
-        cidade=data.get('cidade'),
-        estado=data.get('estado'),
-        cep=data.get('cep'),
-        departamento_id=data.get('departamento')['id'],
-        setor_id=data.get('setor')['id'],
-        faixa_salarial_id=data.get('faixaSalarial')['id'],
-        cargo_id=data.get('cargo')['id'],
-        gerente=data.get('gerente'),
-        tempo_trabalho=data.get('tempoTrabalho'),
-        quantidade_empresas_trabalhou=data.get('quantidadeEmpresasTrabalhou'),
-        quantidade_anos_trabalhados_anteriormente=data.get('quantidadeAnosTrabalhadosAnteriormente'),
-        nivel_escolaridade_id=data.get('nivelEscolaridade')['id'],
-        ex_funcionario=data.get('exFuncionario'),
+        nome=data.get('nome', ''),
+        cpf=data.get('cpf', ''),
+        idade=data.get('idade', 0),
+        genero_id=data.get('genero', {}).get('id', 1),
+        estado_civil_id=data.get('estadoCivil', {}).get('id', 1),
+        telefone=data.get('telefone', ''),
+        email=data.get('email', ''),
+        formacao_id=data.get('formacao', {}).get('id', 1),
+        faculdade_id=data.get('faculdade', {}).get('id', 1),
+        endereco=data.get('endereco', ''),
+        numero=data.get('numero', ''),
+        complemento=data.get('complemento', ''),
+        bairro=data.get('bairro', ''),
+        cidade=data.get('cidade', ''),
+        estado=data.get('estado', ''),
+        cep=data.get('cep', ''),
+        departamento_id=data.get('departamento', {}).get('id', 1),
+        setor_id=data.get('setor', {}).get('id', 1),
+        faixa_salarial_id=data.get('faixaSalarial', {}).get('id', 1),
+        cargo_id=data.get('cargo', {}).get('id', 1),
+        gerente=data.get('gerente', ''),
+        tempo_trabalho=data.get('tempoTrabalho', ''),
+        quantidade_empresas_trabalhou=data.get('quantidadeEmpresasTrabalhou', 0),
+        quantidade_anos_trabalhados_anteriormente=data.get('quantidadeAnosTrabalhadosAnteriormente', 0),
+        nivel_escolaridade_id=data.get('nivelEscolaridade', {}).get('id', 1),
+        ex_funcionario=data.get('exFuncionario', False),
+        senha_hash=123
     )
+    
     db.session.add(colaborador)
     db.session.commit()
     return jsonify(colaborador.to_dict()), 201
@@ -64,12 +66,12 @@ def update_colaborador(id):
     colaborador.nome = data.get('nome', colaborador.nome)
     colaborador.cpf = data.get('cpf', colaborador.cpf)
     colaborador.idade = data.get('idade', colaborador.idade)
-    colaborador.genero_id = data.get('genero')['id']
-    colaborador.estado_civil_id = data.get('estadoCivil')['id']
+    colaborador.genero_id = data.get('genero', {}).get('id', colaborador.genero_id or 1)
+    colaborador.estado_civil_id = data.get('estadoCivil', {}).get('id', colaborador.estado_civil_id or 1)
     colaborador.telefone = data.get('telefone', colaborador.telefone)
     colaborador.email = data.get('email', colaborador.email)
-    colaborador.formacao_id = data.get('formacao')['id']
-    colaborador.faculdade_id = data.get('faculdade')['id']
+    colaborador.formacao_id = data.get('formacao', {}).get('id', colaborador.formacao_id or 1)
+    colaborador.faculdade_id = data.get('faculdade', {}).get('id', colaborador.faculdade_id or 1)
     colaborador.endereco = data.get('endereco', colaborador.endereco)
     colaborador.numero = data.get('numero', colaborador.numero)
     colaborador.complemento = data.get('complemento', colaborador.complemento)
@@ -77,15 +79,15 @@ def update_colaborador(id):
     colaborador.cidade = data.get('cidade', colaborador.cidade)
     colaborador.estado = data.get('estado', colaborador.estado)
     colaborador.cep = data.get('cep', colaborador.cep)
-    colaborador.departamento_id = data.get('departamento')['id']
-    colaborador.setor_id = data.get('setor')['id']
-    colaborador.faixa_salarial_id = data.get('faixaSalarial')['id']
-    colaborador.cargo_id = data.get('cargo')['id']
+    colaborador.departamento_id = data.get('departamento', {}).get('id', colaborador.departamento_id or 1)
+    colaborador.setor_id = data.get('setor', {}).get('id', colaborador.setor_id or 1)
+    colaborador.faixa_salarial_id = data.get('faixaSalarial', {}).get('id', colaborador.faixa_salarial_id or 1)
+    colaborador.cargo_id = data.get('cargo', {}).get('id', colaborador.cargo_id or 1)
     colaborador.gerente = data.get('gerente', colaborador.gerente)
     colaborador.tempo_trabalho = data.get('tempoTrabalho', colaborador.tempo_trabalho)
     colaborador.quantidade_empresas_trabalhou = data.get('quantidadeEmpresasTrabalhou', colaborador.quantidade_empresas_trabalhou)
     colaborador.quantidade_anos_trabalhados_anteriormente = data.get('quantidadeAnosTrabalhadosAnteriormente', colaborador.quantidade_anos_trabalhados_anteriormente)
-    colaborador.nivel_escolaridade_id = data.get('nivelEscolaridade')['id']
+    colaborador.nivel_escolaridade_id = data.get('nivelEscolaridade', {}).get('id', colaborador.nivel_escolaridade_id or 1)
     colaborador.ex_funcionario = data.get('exFuncionario', colaborador.ex_funcionario)
 
     db.session.commit()
@@ -442,3 +444,101 @@ def login():
 def logout():
     session.pop('colaborador_id', None)
     return jsonify({"message": "Logged out successfully"}), 200
+
+# Rota para listar todas as pesquisas
+@bp.route('/pesquisa', methods=['GET'])
+def get_pesquisas():
+    pesquisas = Pesquisa.query.all()
+    return jsonify([pesquisa.to_dict() for pesquisa in pesquisas])
+
+# Rota para adicionar uma nova pesquisa
+@bp.route('/pesquisa', methods=['POST'])
+def create_pesquisa():
+    data = request.get_json()
+    pesquisa = Pesquisa(
+        titulo=data.get('titulo'),
+        descricao=data.get('descricao', ''),
+        ano=data.get('ano')  # Define o ano padrão como o atual se não fornecido
+    )
+    
+    try:
+        db.session.add(pesquisa)
+        db.session.commit()
+        return jsonify(pesquisa.to_dict()), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'Erro ao adicionar pesquisa'}), 400
+
+# Rota para atualizar uma pesquisa existente
+@bp.route('/pesquisa/<int:id>', methods=['PUT'])
+def update_pesquisa(id):
+    pesquisa = Pesquisa.query.get_or_404(id)
+    data = request.get_json()
+
+    pesquisa.titulo = data.get('titulo', pesquisa.titulo)
+    pesquisa.descricao = data.get('descricao', pesquisa.descricao)
+    pesquisa.ano = data.get('ano', pesquisa.ano)
+
+    try:
+        db.session.commit()
+        return jsonify(pesquisa.to_dict()), 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'Erro ao atualizar pesquisa'}), 400
+
+# Rota para deletar uma pesquisa
+@bp.route('/pesquisa/<int:id>', methods=['DELETE'])
+def delete_pesquisa(id):
+    pesquisa = Pesquisa.query.get_or_404(id)
+    
+    try:
+        db.session.delete(pesquisa)
+        db.session.commit()
+        return jsonify({'message': 'Pesquisa excluída com sucesso!'}), 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'Erro ao excluir pesquisa'}), 400
+
+# Rota para listar todas as perguntas de uma pesquisa específica
+@bp.route('/pesquisa/<int:pesquisa_id>/perguntas', methods=['GET'])
+def get_perguntas_by_pesquisa(pesquisa_id):
+    perguntas = Pergunta.query.filter_by(pesquisa_id=pesquisa_id).all()
+    return jsonify([pergunta.to_dict() for pergunta in perguntas])
+
+# Rota para listar todas as respostas de uma pesquisa específica
+@bp.route('/pesquisa/<int:pesquisa_id>/respostas', methods=['GET'])
+def get_respostas_by_pesquisa(pesquisa_id):
+    respostas = Resposta.query.filter_by(pesquisa_id=pesquisa_id).all()
+    return jsonify([resposta.to_dict() for resposta in respostas])
+
+# Rota para adicionar uma resposta de um colaborador a uma pergunta em uma pesquisa
+@bp.route('/pesquisa/<int:pesquisa_id>/colaborador/<int:colaborador_id>/resposta', methods=['POST'])
+def create_or_update_resposta_by_pesquisa(pesquisa_id, colaborador_id):
+    data = request.get_json()
+    
+    # Procura por uma resposta existente
+    resposta_existente = Resposta.query.filter_by(
+        colaborador_id=colaborador_id,
+        pergunta_id=data['pergunta_id'],
+        pesquisa_id=pesquisa_id
+    ).first()
+
+    if resposta_existente:
+        resposta_existente.nota = data['nota']  # Atualiza a nota se a resposta existir
+    else:
+        nova_resposta = Resposta(
+            colaborador_id=colaborador_id,
+            pergunta_id=data['pergunta_id'],
+            pesquisa_id=pesquisa_id,  # Associar a pesquisa
+            nota=data['nota'],
+            trimestre=data['trimestre'],
+            ano=data['ano']
+        )
+        db.session.add(nova_resposta)
+
+    try:
+        db.session.commit()
+        return jsonify(nova_resposta.to_dict() if nova_resposta else resposta_existente.to_dict()), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'Erro ao salvar resposta'}), 400

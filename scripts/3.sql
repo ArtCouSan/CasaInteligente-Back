@@ -1,9 +1,11 @@
 INSERT INTO genero (descricao) VALUES 
+('Não Respondido'),
 ('Masculino'),
 ('Feminino'),
 ('Outros');
 
 INSERT INTO estado_civil (descricao) VALUES 
+('Não Respondido'),
 ('Solteiro'),
 ('Casado'),
 ('Viuvo'),
@@ -14,6 +16,7 @@ INSERT INTO estado_civil (descricao) VALUES
 ('Divorciada');
 
 INSERT INTO nivel_escolaridade (descricao) VALUES 
+('Não Respondido'),
 ('Ensino Fundamental - Completo'),
 ('Ensino Fundamental - Incompleto'),
 ('Ensino Médio - Completo'),
@@ -22,26 +25,31 @@ INSERT INTO nivel_escolaridade (descricao) VALUES
 ('Ensino Superior - Incompleto');
 
 INSERT INTO faculdade (nome) VALUES 
+('Não Respondido'),
 ('USP'),
 ('PUC-SP'),
 ('FGV');
 
 INSERT INTO formacao (descricao) VALUES 
+('Não Respondido'),
 ('Ciência da Computação'),
 ('Engenharia de Software'),
 ('Administração');
 
 INSERT INTO departamento (nome) VALUES 
+('Não Respondido'),
 ('Tecnologia da Informação'),
 ('Financeiro'),
 ('Rercursos Humanos');
 
 INSERT INTO setor (nome) VALUES 
+('Não Respondido'),
 ('Desenvolvimento'),
 ('Contabilidade'),
 ('Recrutamento');
 
 INSERT INTO faixa_salarial (descricao) VALUES 
+('R$ 0 - R$ 0'),
 ('R$ 1.000 - R$ 1.500'),
 ('R$ 1.501 - R$ 2.000'),
 ('R$ 2.001 - R$ 2.500'),
@@ -72,6 +80,7 @@ INSERT INTO faixa_salarial (descricao) VALUES
 ('R$ 14.501 - R$ 15.000');
 
 INSERT INTO cargo (nome) VALUES 
+('Não Respondido'),
 ('Desenvolvedor'),
 ('Analista Financeiro'),
 ('Gerente de TI');

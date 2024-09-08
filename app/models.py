@@ -1,9 +1,9 @@
 from . import db
-from werkzeug.security import generate_password_hash, check_password_hash
 
+# Genero Table
 class Genero(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(50), nullable=False)
+    descricao = db.Column(db.String(50), default='')
 
     def to_dict(self):
         return {
@@ -11,9 +11,18 @@ class Genero(db.Model):
             'descricao': self.descricao
         }
 
+    def from_dict(self, data):
+        for field in ['descricao']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<Genero {self.descricao}>'
+
+# Estado Civil Table
 class EstadoCivil(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(50), nullable=False)
+    descricao = db.Column(db.String(50), default='')
 
     def to_dict(self):
         return {
@@ -21,9 +30,18 @@ class EstadoCivil(db.Model):
             'descricao': self.descricao
         }
 
+    def from_dict(self, data):
+        for field in ['descricao']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<EstadoCivil {self.descricao}>'
+
+# Formacao Table
 class Formacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(255), nullable=False)
+    descricao = db.Column(db.String(255), default='')
 
     def to_dict(self):
         return {
@@ -31,9 +49,18 @@ class Formacao(db.Model):
             'descricao': self.descricao
         }
 
+    def from_dict(self, data):
+        for field in ['descricao']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<Formacao {self.descricao}>'
+
+# Faculdade Table
 class Faculdade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(255), nullable=False)
+    nome = db.Column(db.String(255), default='')
 
     def to_dict(self):
         return {
@@ -41,9 +68,18 @@ class Faculdade(db.Model):
             'nome': self.nome
         }
 
+    def from_dict(self, data):
+        for field in ['nome']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<Faculdade {self.nome}>'
+
+# Departamento Table
 class Departamento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
+    nome = db.Column(db.String(100), default='')
 
     def to_dict(self):
         return {
@@ -51,9 +87,18 @@ class Departamento(db.Model):
             'nome': self.nome
         }
 
+    def from_dict(self, data):
+        for field in ['nome']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<Departamento {self.nome}>'
+
+# Setor Table
 class Setor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
+    nome = db.Column(db.String(100), default='')
 
     def to_dict(self):
         return {
@@ -61,9 +106,18 @@ class Setor(db.Model):
             'nome': self.nome
         }
 
+    def from_dict(self, data):
+        for field in ['nome']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<Setor {self.nome}>'
+
+# Faixa Salarial Table
 class FaixaSalarial(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(50), nullable=False)
+    descricao = db.Column(db.String(50), default='')
 
     def to_dict(self):
         return {
@@ -71,9 +125,37 @@ class FaixaSalarial(db.Model):
             'descricao': self.descricao
         }
 
+    def from_dict(self, data):
+        for field in ['descricao']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<FaixaSalarial {self.descricao}>'
+
+# Nivel Escolaridade Table
+class NivelEscolaridade(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    descricao = db.Column(db.String(50), default='')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'descricao': self.descricao
+        }
+
+    def from_dict(self, data):
+        for field in ['descricao']:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def __repr__(self):
+        return f'<NivelEscolaridade {self.descricao}>'
+
+# Cargo Table
 class Cargo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
+    nome = db.Column(db.String(100), default='')
 
     def to_dict(self):
         return {
@@ -81,45 +163,44 @@ class Cargo(db.Model):
             'nome': self.nome
         }
 
-class NivelEscolaridade(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(50), nullable=False)
+    def from_dict(self, data):
+        for field in ['nome']:
+            if field in data:
+                setattr(self, field, data[field])
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'descricao': self.descricao
-        }
+    def __repr__(self):
+        return f'<Cargo {self.nome}>'
+
 
 class Colaborador(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(255), nullable=False)
-    cpf = db.Column(db.String(14), nullable=False, unique=True)
-    idade = db.Column(db.Integer, nullable=False)
-    genero_id = db.Column(db.Integer, db.ForeignKey('genero.id'))
-    estado_civil_id = db.Column(db.Integer, db.ForeignKey('estado_civil.id'))
-    telefone = db.Column(db.String(20))
-    email = db.Column(db.String(255))
-    formacao_id = db.Column(db.Integer, db.ForeignKey('formacao.id'))
-    faculdade_id = db.Column(db.Integer, db.ForeignKey('faculdade.id'))
-    endereco = db.Column(db.String(255), nullable=False)
-    numero = db.Column(db.String(10))
-    complemento = db.Column(db.String(255))
-    bairro = db.Column(db.String(100))
-    cidade = db.Column(db.String(100))
-    estado = db.Column(db.String(50))
-    cep = db.Column(db.String(20))
-    departamento_id = db.Column(db.Integer, db.ForeignKey('departamento.id'))
-    setor_id = db.Column(db.Integer, db.ForeignKey('setor.id'))
-    faixa_salarial_id = db.Column(db.Integer, db.ForeignKey('faixa_salarial.id'))
-    cargo_id = db.Column(db.Integer, db.ForeignKey('cargo.id'))
-    gerente = db.Column(db.String(100))
-    tempo_trabalho = db.Column(db.String(50))
-    quantidade_empresas_trabalhou = db.Column(db.Integer)
-    quantidade_anos_trabalhados_anteriormente = db.Column(db.Integer)
-    nivel_escolaridade_id = db.Column(db.Integer, db.ForeignKey('nivel_escolaridade.id'))
-    ex_funcionario = db.Column(db.Boolean, default=False)
+    nome = db.Column(db.String(255), default='')
+    cpf = db.Column(db.String(14), unique=True, nullable=False)
+    idade = db.Column(db.Integer, default=0)
+    genero_id = db.Column(db.Integer, db.ForeignKey('genero.id'), nullable=True)
+    estado_civil_id = db.Column(db.Integer, db.ForeignKey('estado_civil.id'), nullable=True)
+    telefone = db.Column(db.String(20), default='')
+    email = db.Column(db.String(255), default='')
     senha_hash = db.Column(db.String(255), nullable=False)
+    formacao_id = db.Column(db.Integer, db.ForeignKey('formacao.id'), nullable=True)
+    faculdade_id = db.Column(db.Integer, db.ForeignKey('faculdade.id'), nullable=True)
+    endereco = db.Column(db.String(255), default='')
+    numero = db.Column(db.String(10), default='')
+    complemento = db.Column(db.String(255), default='')
+    bairro = db.Column(db.String(100), default='')
+    cidade = db.Column(db.String(100), default='')
+    estado = db.Column(db.String(50), default='')
+    cep = db.Column(db.String(20), default='')
+    departamento_id = db.Column(db.Integer, db.ForeignKey('departamento.id'), nullable=True)
+    setor_id = db.Column(db.Integer, db.ForeignKey('setor.id'), nullable=True)
+    faixa_salarial_id = db.Column(db.Integer, db.ForeignKey('faixa_salarial.id'), nullable=True)
+    cargo_id = db.Column(db.Integer, db.ForeignKey('cargo.id'), nullable=True)
+    gerente = db.Column(db.String(100), default='')
+    tempo_trabalho = db.Column(db.String(50), default='')
+    quantidade_empresas_trabalhou = db.Column(db.Integer, default=0)
+    quantidade_anos_trabalhados_anteriormente = db.Column(db.Integer, default=0)
+    nivel_escolaridade_id = db.Column(db.Integer, db.ForeignKey('nivel_escolaridade.id'), nullable=True)
+    ex_funcionario = db.Column(db.Boolean, default=False)
 
     genero = db.relationship('Genero', backref='colaboradores')
     estado_civil = db.relationship('EstadoCivil', backref='colaboradores')
@@ -241,7 +322,6 @@ class AnaliseColaborador(db.Model):
             'observacao': self.observacao
         }
     
-    
 class Pergunta(db.Model):
     __tablename__ = 'pergunta'
     id = db.Column(db.Integer, primary_key=True, index=True)
@@ -258,26 +338,23 @@ class Pergunta(db.Model):
             data['respostas'] = [resposta.to_dict() for resposta in self.respostas]
         return data
 
+class Pesquisa(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(255), nullable=False)
+    descricao = db.Column(db.Text, default='')
+    ano = db.Column(db.Integer, nullable=False)
+
+    respostas = db.relationship("Resposta", back_populates="pesquisa")  # Correção: apontar para "pesquisa"
+
 class Resposta(db.Model):
     __tablename__ = 'resposta'
     
     id = db.Column(db.Integer, primary_key=True, index=True)
-    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id'), nullable=False)
-    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id'), nullable=False)
+    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id', ondelete='CASCADE'), nullable=False)
+    pesquisa_id = db.Column(db.Integer, db.ForeignKey('pesquisa.id', ondelete='CASCADE'), nullable=False)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id', ondelete='CASCADE'), nullable=False)
     nota = db.Column(db.Integer, nullable=False)
-    trimestre = db.Column(db.Enum('Q1', 'Q2', 'Q3', 'Q4'), nullable=False)
-    ano = db.Column(db.Integer, nullable=False)
 
     colaborador = db.relationship("Colaborador", back_populates="respostas")
     pergunta = db.relationship("Pergunta", back_populates="respostas")
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'colaborador_id': self.colaborador_id,
-            'pergunta_id': self.pergunta_id,
-            'nota': self.nota,
-            'trimestre': self.trimestre,
-            'ano': self.ano,
-            'pergunta_texto': self.pergunta.texto if self.pergunta else None
-        }
+    pesquisa = db.relationship("Pesquisa", back_populates="respostas")  # Correção: adicionar "back_populates" aqui

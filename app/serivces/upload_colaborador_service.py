@@ -109,47 +109,31 @@ def processar_csv(file):
 
         for index, row in df.iterrows():
             # Normalizar descrições usando os embeddings
-            row['genero'] = normalizar_descricao(row['genero'], sinonimos_genero)
-            row['estadoCivil'] = normalizar_descricao(row['estadoCivil'], sinonimos_estado_civil)
-            row['nivelEscolaridade'] = normalizar_descricao(row['nivelEscolaridade'], sinonimos_nivel_escolaridade)
-            row['departamento'] = normalizar_descricao(row['departamento'], sinonimos_departamento)
-            row['formacao'] = normalizar_descricao(row['formacao'], sinonimos_formacao)
-            row['faculdade'] = normalizar_descricao(row['faculdade'], sinonimos_faculdade)
-            row['cargo'] = normalizar_descricao(row['cargo'], sinonimos_cargo)
+            if row['genero']:
+                row['genero'] = normalizar_descricao(row['genero'], sinonimos_genero)
+            if row['estadoCivil']:
+                row['estadoCivil'] = normalizar_descricao(row['estadoCivil'], sinonimos_estado_civil)
+            if row['nivelEscolaridade']:
+                row['nivelEscolaridade'] = normalizar_descricao(row['nivelEscolaridade'], sinonimos_nivel_escolaridade)
+            if row['departamento']:
+                row['departamento'] = normalizar_descricao(row['departamento'], sinonimos_departamento)
+            if row['formacao']:
+                row['formacao'] = normalizar_descricao(row['formacao'], sinonimos_formacao)
+            if row['faculdade']:
+                row['faculdade'] = normalizar_descricao(row['faculdade'], sinonimos_faculdade)
+            if row['cargo']:
+                row['cargo'] = normalizar_descricao(row['cargo'], sinonimos_cargo)
 
             # Verificar e aplicar as normalizações antes das consultas
-            genero = Genero.query.filter_by(descricao=row['genero']).first() or Genero(descricao=row['genero'])
-            estado_civil = EstadoCivil.query.filter_by(descricao=row['estadoCivil']).first() or EstadoCivil(descricao=row['estadoCivil'])
-            formacao = Formacao.query.filter_by(descricao=row['formacao']).first() or Formacao(descricao=row['formacao'])
-            faculdade = Faculdade.query.filter_by(nome=row['faculdade']).first() or Faculdade(nome=row['faculdade'])
-            departamento = Departamento.query.filter_by(nome=row['departamento']).first() or Departamento(nome=row['departamento'])
-            setor = Setor.query.filter_by(nome=row['setor']).first() or Setor(nome=row['setor'])
-            faixa_salarial = encaixar_faixa_salarial(row['salario'])
-            cargo = Cargo.query.filter_by(nome=row['cargo']).first() or Cargo(nome=row['cargo'])
-            nivel_escolaridade = NivelEscolaridade.query.filter_by(descricao=row['nivelEscolaridade']).first() or NivelEscolaridade(descricao=row['nivelEscolaridade'])
-
-            if faixa_salarial is None:
-                raise Exception(f"Faixa salarial não encontrada para o salário: {row['salario']}")
-
-            # Adicionar os novos objetos ao banco de dados se não existirem
-            if genero.id is None:
-                db.session.add(genero)
-            if estado_civil.id is None:
-                db.session.add(estado_civil)
-            if formacao.id is None:
-                db.session.add(formacao)
-            if faculdade.id is None:
-                db.session.add(faculdade)
-            if departamento.id is None:
-                db.session.add(departamento)
-            if setor.id is None:
-                db.session.add(setor)
-            if faixa_salarial.id is None:
-                db.session.add(faixa_salarial)
-            if cargo.id is None:
-                db.session.add(cargo)
-            if nivel_escolaridade.id is None:
-                db.session.add(nivel_escolaridade)
+            genero = Genero.query.filter_by(descricao=row['genero']).first() if row['genero'] else Genero.query.get(1)
+            estado_civil = EstadoCivil.query.filter_by(descricao=row['estadoCivil']).first() if row['estadoCivil'] else EstadoCivil.query.get(1)
+            formacao = Formacao.query.filter_by(descricao=row['formacao']).first() if row['formacao'] else Formacao.query.get(1)
+            faculdade = Faculdade.query.filter_by(nome=row['faculdade']).first() if row['faculdade'] else Faculdade.query.get(1)
+            departamento = Departamento.query.filter_by(nome=row['departamento']).first() if row['departamento'] else Departamento.query.get(1)
+            setor = Setor.query.filter_by(nome=row['setor']).first() if row['setor'] else Setor.query.get(1)
+            faixa_salarial = encaixar_faixa_salarial(row['salario']) if row['salario'] else FaixaSalarial.query.get(1)
+            cargo = Cargo.query.filter_by(nome=row['cargo']).first() if row['cargo'] else Cargo.query.get(1)
+            nivel_escolaridade = NivelEscolaridade.query.filter_by(descricao=row['nivelEscolaridade']).first() if row['nivelEscolaridade'] else NivelEscolaridade.query.get(1)
 
             colaborador = Colaborador(
                 nome=row['nome'],
@@ -177,7 +161,8 @@ def processar_csv(file):
                 quantidade_empresas_trabalhou=row['quantidadeEmpresasTrabalhou'],
                 quantidade_anos_trabalhados_anteriormente=row['quantidadeAnosTrabalhadosAnteriormente'],
                 nivel_escolaridade=nivel_escolaridade,
-                ex_funcionario=row['exFuncionario']
+                ex_funcionario=row.get('exFuncionario', False),
+                senha_hash=123
             )
 
             db.session.add(colaborador)
@@ -186,3 +171,4 @@ def processar_csv(file):
         return 'Arquivo enviado e processado com sucesso'
     except Exception as e:
         raise Exception(f'Erro ao processar o arquivo: {str(e)}')
+
