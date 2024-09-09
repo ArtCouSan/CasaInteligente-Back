@@ -132,3 +132,11 @@ CREATE TABLE resposta (
     FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE,
     UNIQUE (colaborador_id, pesquisa_id, pergunta_id) 
 ) ENGINE=InnoDB;
+
+CREATE TABLE resposta_opcao (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    texto VARCHAR(255) NOT NULL,
+    nota TINYINT NOT NULL,  -- Nota associada à opção de resposta
+    pergunta_id INT NOT NULL,
+    FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE
+) ENGINE=InnoDB;

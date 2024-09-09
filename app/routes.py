@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 from pymysql import IntegrityError 
 from app.serivces.upload_colaborador_service import processar_csv
-from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Pesquisa, Resposta, Setor, db, Colaborador, AnaliseColaborador
+from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Pesquisa, Resposta, RespostaOpcao, Setor, db, Colaborador, AnaliseColaborador
 from bson import ObjectId
 from . import mongo 
 from app.chat.chat_service import fazer_pergunta, gerar_contexto_colaborador, gerar_nova_sugestao_ia, gerar_novo_motivo_ia
@@ -194,21 +194,41 @@ def listar_faixas_salariais():
     return jsonify([faixa_salarial.to_dict() for faixa_salarial in faixas_salariais])
 
 # Rota para listar todas as perguntas
-@bp.route('/perguntas', methods=['GET'])
+@bp.route('/pergunta', methods=['GET'])
 def get_perguntas():
+    # Carrega todas as perguntas, incluindo as opções de resposta
     perguntas = Pergunta.query.all()
-    return jsonify([pergunta.to_dict(include_respostas=False) for pergunta in perguntas])
+    return jsonify([pergunta.to_dict(include_respostas=True) for pergunta in perguntas])
 
 # Rota para adicionar uma nova pergunta
 @bp.route('/pergunta', methods=['POST'])
 def create_pergunta():
     data = request.get_json()
+
+    # Cria a nova pergunta
     pergunta = Pergunta(
         texto=data.get('texto')
     )
     db.session.add(pergunta)
     db.session.commit()
-    return jsonify(pergunta.to_dict()), 201
+
+    # Verifica se há opções de resposta associadas e as adiciona
+    opcoes_resposta = data.get('opcoes_resposta', [])
+
+    print(opcoes_resposta)
+    
+    for opcao in opcoes_resposta:
+        resposta_opcao = RespostaOpcao(
+            texto=opcao.get('texto'),
+            nota=opcao.get('nota'),
+            pergunta_id=pergunta.id
+        )
+        db.session.add(resposta_opcao)
+
+    db.session.commit()
+
+    # Retorna a pergunta com as opções de resposta
+    return jsonify(pergunta.to_dict(include_respostas=True)), 201
 
 # Rota para atualizar uma pergunta existente
 @bp.route('/pergunta/<int:id>', methods=['PUT'])
@@ -216,10 +236,28 @@ def update_pergunta(id):
     pergunta = Pergunta.query.get_or_404(id)
     data = request.get_json()
 
+    # Atualiza o texto da pergunta
     pergunta.texto = data.get('texto', pergunta.texto)
 
+    # Atualiza ou insere novas opções de resposta
+    novas_opcoes = data.get('opcoes_resposta', [])
+    
+    # Deleta as opções antigas
+    RespostaOpcao.query.filter_by(pergunta_id=pergunta.id).delete()
+
+    # Adiciona ou edita as novas opções de resposta
+    for opcao in novas_opcoes:
+        nova_resposta_opcao = RespostaOpcao(
+            texto=opcao.get('texto'),
+            nota=opcao.get('nota'),
+            pergunta_id=pergunta.id
+        )
+        db.session.add(nova_resposta_opcao)
+
+    # Salva as alterações no banco de dados
     db.session.commit()
-    return jsonify(pergunta.to_dict())
+
+    return jsonify(pergunta.to_dict(include_respostas=True))
 
 # Rota para deletar uma pergunta
 @bp.route('/pergunta/<int:id>', methods=['DELETE'])

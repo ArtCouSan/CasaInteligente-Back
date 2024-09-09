@@ -11,14 +11,6 @@ class Genero(db.Model):
             'descricao': self.descricao
         }
 
-    def from_dict(self, data):
-        for field in ['descricao']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<Genero {self.descricao}>'
-
 # Estado Civil Table
 class EstadoCivil(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,14 +21,6 @@ class EstadoCivil(db.Model):
             'id': self.id,
             'descricao': self.descricao
         }
-
-    def from_dict(self, data):
-        for field in ['descricao']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<EstadoCivil {self.descricao}>'
 
 # Formacao Table
 class Formacao(db.Model):
@@ -49,14 +33,6 @@ class Formacao(db.Model):
             'descricao': self.descricao
         }
 
-    def from_dict(self, data):
-        for field in ['descricao']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<Formacao {self.descricao}>'
-
 # Faculdade Table
 class Faculdade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,14 +43,6 @@ class Faculdade(db.Model):
             'id': self.id,
             'nome': self.nome
         }
-
-    def from_dict(self, data):
-        for field in ['nome']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<Faculdade {self.nome}>'
 
 # Departamento Table
 class Departamento(db.Model):
@@ -87,14 +55,6 @@ class Departamento(db.Model):
             'nome': self.nome
         }
 
-    def from_dict(self, data):
-        for field in ['nome']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<Departamento {self.nome}>'
-
 # Setor Table
 class Setor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -105,14 +65,6 @@ class Setor(db.Model):
             'id': self.id,
             'nome': self.nome
         }
-
-    def from_dict(self, data):
-        for field in ['nome']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<Setor {self.nome}>'
 
 # Faixa Salarial Table
 class FaixaSalarial(db.Model):
@@ -125,14 +77,6 @@ class FaixaSalarial(db.Model):
             'descricao': self.descricao
         }
 
-    def from_dict(self, data):
-        for field in ['descricao']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<FaixaSalarial {self.descricao}>'
-
 # Nivel Escolaridade Table
 class NivelEscolaridade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -143,14 +87,6 @@ class NivelEscolaridade(db.Model):
             'id': self.id,
             'descricao': self.descricao
         }
-
-    def from_dict(self, data):
-        for field in ['descricao']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<NivelEscolaridade {self.descricao}>'
 
 # Cargo Table
 class Cargo(db.Model):
@@ -163,15 +99,7 @@ class Cargo(db.Model):
             'nome': self.nome
         }
 
-    def from_dict(self, data):
-        for field in ['nome']:
-            if field in data:
-                setattr(self, field, data[field])
-
-    def __repr__(self):
-        return f'<Cargo {self.nome}>'
-
-
+# Colaborador Table
 class Colaborador(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255), default='')
@@ -211,9 +139,8 @@ class Colaborador(db.Model):
     faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
     cargo = db.relationship('Cargo', backref='colaboradores')
     nivel_escolaridade = db.relationship('NivelEscolaridade', backref='colaboradores')
-    respostas = db.relationship("Resposta", back_populates="colaborador")  # Relação bidirecional   
+    respostas_colaborador = db.relationship("Resposta", back_populates="colaborador", cascade="all, delete-orphan")
     perfis = db.relationship('Perfil', secondary='colaborador_perfil', backref='colaboradores')
-
 
     def to_dict(self):
         return {
@@ -244,7 +171,8 @@ class Colaborador(db.Model):
             'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
             'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
             'exFuncionario': self.ex_funcionario,
-            'perfis': [perfil.to_dict() for perfil in self.perfis]  # Inclui os perfis associados
+            'perfis': [perfil.to_dict() for perfil in self.perfis],
+            'respostas': [resposta.to_dict() for resposta in self.respostas_colaborador]  # Inclui as respostas associadas
         }
     
     def to_dict_somente_dados(self):
@@ -277,22 +205,87 @@ class Colaborador(db.Model):
             'exFuncionario': self.ex_funcionario,
             'respostas': [resposta.to_dict() for resposta in self.respostas] 
         }
-    
+
+# Perfil Table
 class Perfil(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(50), nullable=False, unique=True)  # Ex: 'admin', 'colaborador', 'gerente'
-    
+    nome = db.Column(db.String(50), nullable=False, unique=True)
+
     def to_dict(self):
         return {
             'id': self.id,
             'nome': self.nome
         }
-    
+
+# Tabela de relacionamento entre Colaborador e Perfil
 class ColaboradorPerfil(db.Model):
     __tablename__ = 'colaborador_perfil'
-    
     colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id'), primary_key=True)
     perfil_id = db.Column(db.Integer, db.ForeignKey('perfil.id'), primary_key=True)
+
+# Pesquisa Table
+class Pesquisa(db.Model):
+    __tablename__ = 'pesquisa'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    titulo = db.Column(db.String(255), nullable=False)
+    descricao = db.Column(db.Text, default='')
+    ano = db.Column(db.Integer, nullable=False)
+
+    respostas_pesquisa = db.relationship("Resposta", back_populates="pesquisa", cascade="all, delete-orphan")
+
+# Pergunta Table
+class Pergunta(db.Model):
+    __tablename__ = 'pergunta'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    texto = db.Column(db.String(255), nullable=False)
+
+    respostas_pergunta = db.relationship("RespostaOpcao", backref="pergunta", cascade="all, delete-orphan")
+
+    def to_dict(self, include_respostas=False):
+        data = {
+            'id': self.id,
+            'texto': self.texto,
+        }
+        if include_respostas:
+            data['opcoes_resposta'] = [resposta.to_dict() for resposta in self.respostas_pergunta]
+        return data
+
+# RespostaOpcao Table
+class RespostaOpcao(db.Model):
+    __tablename__ = 'resposta_opcao'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    texto = db.Column(db.String(255), nullable=False)
+    nota = db.Column(db.Integer, nullable=False)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id', ondelete='CASCADE'), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'texto': self.texto,
+            'nota': self.nota
+        }
+
+# Resposta Table
+class Resposta(db.Model):
+    __tablename__ = 'resposta'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id', ondelete='CASCADE'), nullable=False)
+    pesquisa_id = db.Column(db.Integer, db.ForeignKey('pesquisa.id', ondelete='CASCADE'), nullable=False)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id', ondelete='CASCADE'), nullable=False)
+    nota = db.Column(db.Integer, nullable=False)
+
+    colaborador = db.relationship("Colaborador", back_populates="respostas_colaborador")
+    pergunta = db.relationship("Pergunta", backref="respostas")
+    pesquisa = db.relationship("Pesquisa", back_populates="respostas_pesquisa")
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'colaborador_id': self.colaborador_id,
+            'pesquisa_id': self.pesquisa_id,
+            'pergunta_id': self.pergunta_id,
+            'nota': self.nota
+        }
 
 class AnaliseColaborador(db.Model):
     __tablename__ = 'colaborador_predicao'
@@ -321,40 +314,3 @@ class AnaliseColaborador(db.Model):
             'sugestao': self.sugestao,
             'observacao': self.observacao
         }
-    
-class Pergunta(db.Model):
-    __tablename__ = 'pergunta'
-    id = db.Column(db.Integer, primary_key=True, index=True)
-    texto = db.Column(db.String(255), nullable=False)
-
-    respostas = db.relationship("Resposta", back_populates="pergunta")
-
-    def to_dict(self, include_respostas=False):
-        data = {
-            'id': self.id,
-            'texto': self.texto,
-        }
-        if include_respostas:
-            data['respostas'] = [resposta.to_dict() for resposta in self.respostas]
-        return data
-
-class Pesquisa(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(255), nullable=False)
-    descricao = db.Column(db.Text, default='')
-    ano = db.Column(db.Integer, nullable=False)
-
-    respostas = db.relationship("Resposta", back_populates="pesquisa")  # Correção: apontar para "pesquisa"
-
-class Resposta(db.Model):
-    __tablename__ = 'resposta'
-    
-    id = db.Column(db.Integer, primary_key=True, index=True)
-    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id', ondelete='CASCADE'), nullable=False)
-    pesquisa_id = db.Column(db.Integer, db.ForeignKey('pesquisa.id', ondelete='CASCADE'), nullable=False)
-    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id', ondelete='CASCADE'), nullable=False)
-    nota = db.Column(db.Integer, nullable=False)
-
-    colaborador = db.relationship("Colaborador", back_populates="respostas")
-    pergunta = db.relationship("Pergunta", back_populates="respostas")
-    pesquisa = db.relationship("Pesquisa", back_populates="respostas")  # Correção: adicionar "back_populates" aqui
