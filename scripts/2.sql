@@ -79,6 +79,10 @@ CREATE TABLE colaborador (
     quantidade_anos_trabalhados_anteriormente INT DEFAULT 0,        -- Valor padrão 0
     nivel_escolaridade_id INT DEFAULT NULL,
     ex_funcionario BOOL DEFAULT 0,                                 -- Valor padrão 0 (falso)
+    aumento_percentual_do_salario INT DEFAULT NULL, 
+    distancia_de_casa INT DEFAULT NULL, 
+    anos_com_o_atual_gestor INT DEFAULT NULL, 
+    anos_na_empresa INT DEFAULT NULL,
     FOREIGN KEY (genero_id) REFERENCES genero(id),
     FOREIGN KEY (estado_civil_id) REFERENCES estado_civil(id),
     FOREIGN KEY (formacao_id) REFERENCES formacao(id),
