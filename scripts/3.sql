@@ -96,3 +96,43 @@ INSERT INTO perfil(nome) VALUES
 ('colaborador'),
 ('dp'),
 ('desenvolvedor')
+
+-- Insere as opções de resposta para a Pergunta 1
+INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
+('Concordo totalmente', 5, 1),
+('Concordo', 4, 1),
+('Neutro', 3, 1),
+('Discordo', 2, 1),
+('Discordo totalmente', 1, 1);
+
+-- Insere as opções de resposta para a Pergunta 2
+INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
+('Concordo totalmente', 5, 2),
+('Concordo', 4, 2),
+('Neutro', 3, 2),
+('Discordo', 2, 2),
+('Discordo totalmente', 1, 2);
+
+-- Insere as opções de resposta para a Pergunta 3
+INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
+('Concordo totalmente', 5, 3),
+('Concordo', 4, 3),
+('Neutro', 3, 3),
+('Discordo', 2, 3),
+('Discordo totalmente', 1, 3);
+
+-- Insere as opções de resposta para a Pergunta 4
+INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
+('Concordo totalmente', 5, 4),
+('Concordo', 4, 4),
+('Neutro', 3, 4),
+('Discordo', 2, 4),
+('Discordo totalmente', 1, 4);
+
+-- Insere as opções de resposta para a Pergunta 5
+INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
+('Concordo totalmente', 5, 5),
+('Concordo', 4, 5),
+('Neutro', 3, 5),
+('Discordo', 2, 5),
+('Discordo totalmente', 1, 5);

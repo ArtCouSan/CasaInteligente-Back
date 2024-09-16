@@ -1,10 +1,10 @@
 from flask import Blueprint, jsonify, request, session
 from pymysql import IntegrityError 
 from app.serivces.upload_colaborador_service import processar_csv
-from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Pesquisa, Resposta, RespostaOpcao, Setor, db, Colaborador, AnaliseColaborador
+from .models import Cargo, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Pergunta, Pesquisa, PesquisaPergunta, Resposta, RespostaOpcao, Setor, db, Colaborador, AnaliseColaborador
 from bson import ObjectId
 from . import mongo 
-from app.chat.chat_service import fazer_pergunta, gerar_contexto_colaborador, gerar_nova_sugestao_ia, gerar_novo_motivo_ia
+from app.chat.ia_service import fazer_pergunta, gerar_contexto_colaborador, gerar_nova_sugestao_ia, gerar_novo_motivo_ia
 from flask import send_file
 import os
 
@@ -303,53 +303,60 @@ def get_respostas(colaborador_id):
     respostas = Resposta.query.filter_by(colaborador_id=colaborador_id).all()
     return jsonify([resposta.to_dict() for resposta in respostas])
 
-# Rota para adicionar uma resposta de um colaborador a uma pergunta
+# Rota para adicionar ou atualizar uma resposta de um colaborador a uma pergunta
 @bp.route('/colaborador/<int:colaborador_id>/resposta', methods=['POST'])
 def create_or_update_resposta(colaborador_id):
     data = request.get_json()
 
-    # Tente encontrar uma resposta existente com a mesma combinação de colaborador, pergunta, trimestre e ano
-    resposta_existente = Resposta.query.filter_by(
-        colaborador_id=colaborador_id,
-        pergunta_id=data['pergunta_id'],
-        trimestre=data['trimestre'],
-        ano=data['ano']
-    ).first()
+    try:
+        # Tente encontrar uma resposta existente com a mesma combinação de colaborador, pergunta, trimestre e ano
+        resposta_existente = Resposta.query.filter_by(
+            colaborador_id=colaborador_id,
+            pergunta_id=data['pergunta_id']
+        ).first()
 
-    if resposta_existente:
-        # Se a resposta existir, atualize a nota
-        resposta_existente.nota = data['nota']
-        db.session.commit()
-        return jsonify(resposta_existente.to_dict()), 200
-    else:
-        try:
+        if resposta_existente:
+            # Se a resposta existir, atualize a nota e qualquer outro campo necessário
+            resposta_existente.nota = data['nota']
+
+            # Verifica se a resposta deve ser marcada como fechada ou anônima
+            if 'is_pesquisa_fechada' in data:
+                resposta_existente.is_pesquisa_fechada = data['is_pesquisa_fechada']
+            if 'is_pesquisa_anonima' in data:
+                resposta_existente.is_pesquisa_anonima = data['is_pesquisa_anonima']
+
+            db.session.commit()
+            return jsonify(resposta_existente.to_dict()), 200
+        else:
             # Se não existir, crie uma nova resposta
             nova_resposta = Resposta(
                 colaborador_id=colaborador_id,
                 pergunta_id=data['pergunta_id'],
+                pesquisa_id=data['pesquisa_id'],
                 nota=data['nota'],
-                trimestre=data['trimestre'],
-                ano=data['ano']
+                is_pesquisa_fechada=data.get('is_pesquisa_fechada', None),  # Define como None se não fornecido
+                is_pesquisa_anonima=data.get('is_pesquisa_anonima', None)   # Define como None se não fornecido
             )
             db.session.add(nova_resposta)
             db.session.commit()
             return jsonify(nova_resposta.to_dict()), 201
-        except IntegrityError:
-            db.session.rollback()
-            return jsonify({"message": "Erro ao tentar criar a resposta."}), 400
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"message": "Erro ao tentar criar ou atualizar a resposta."}), 400
 
-# Rota para atualizar uma resposta existente
 @bp.route('/resposta/<int:id>', methods=['PUT'])
 def update_resposta(id):
     resposta = Resposta.query.get_or_404(id)
     data = request.get_json()
 
+    # Atualiza os campos fornecidos no corpo da requisição
     resposta.nota = data.get('nota', resposta.nota)
-    resposta.trimestre = data.get('trimestre', resposta.trimestre)
-    resposta.ano = data.get('ano', resposta.ano)
+    resposta.is_pesquisa_fechada = data.get('is_pesquisa_fechada', resposta.is_pesquisa_fechada)
+    resposta.is_pesquisa_anonima = data.get('is_pesquisa_anonima', resposta.is_pesquisa_anonima)
 
+    # Salva a data e hora automaticamente (já configurado no modelo)
     db.session.commit()
-    return jsonify(resposta.to_dict())
+    return jsonify(resposta.to_dict()), 200
 
 # Rota para deletar uma resposta
 @bp.route('/resposta/<int:id>', methods=['DELETE'])
@@ -483,43 +490,70 @@ def logout():
     session.pop('colaborador_id', None)
     return jsonify({"message": "Logged out successfully"}), 200
 
-# Rota para listar todas as pesquisas
+# Rota para listar todas as pesquisas com perguntas
 @bp.route('/pesquisa', methods=['GET'])
 def get_pesquisas():
     pesquisas = Pesquisa.query.all()
-    return jsonify([pesquisa.to_dict() for pesquisa in pesquisas])
+    return jsonify([pesquisa.to_dict(include_perguntas=True) for pesquisa in pesquisas])
 
 # Rota para adicionar uma nova pesquisa
 @bp.route('/pesquisa', methods=['POST'])
 def create_pesquisa():
     data = request.get_json()
+    
+    # Criar a pesquisa com os dados fornecidos
     pesquisa = Pesquisa(
         titulo=data.get('titulo'),
         descricao=data.get('descricao', ''),
-        ano=data.get('ano')  # Define o ano padrão como o atual se não fornecido
+        ano=data.get('ano'),  # Define o ano padrão como o atual se não fornecido,
+        is_pesquisa_fechada=data.get('is_pesquisa_fechada', None),  # Valor simples
+        is_pesquisa_anonima=data.get('is_pesquisa_anonima', None)   # Valor simples
     )
     
+    # Extrair os IDs das perguntas
+    perguntas = data.get('perguntas', [])
+    perguntas_ids = [pergunta.get('id') for pergunta in perguntas if pergunta.get('id')]
+
+    if perguntas_ids:
+        # Buscar as perguntas no banco de dados
+        perguntas_obj = Pergunta.query.filter(Pergunta.id.in_(perguntas_ids)).all()
+        # Associar as perguntas à pesquisa
+        pesquisa.perguntas = perguntas_obj
+    
     try:
+        # Adicionar a pesquisa à sessão e commit
         db.session.add(pesquisa)
         db.session.commit()
-        return jsonify(pesquisa.to_dict()), 201
+        return jsonify(pesquisa.to_dict(include_perguntas=True)), 201
     except IntegrityError:
         db.session.rollback()
         return jsonify({'error': 'Erro ao adicionar pesquisa'}), 400
 
-# Rota para atualizar uma pesquisa existente
 @bp.route('/pesquisa/<int:id>', methods=['PUT'])
 def update_pesquisa(id):
     pesquisa = Pesquisa.query.get_or_404(id)
     data = request.get_json()
 
+    # Atualiza os dados da pesquisa
     pesquisa.titulo = data.get('titulo', pesquisa.titulo)
     pesquisa.descricao = data.get('descricao', pesquisa.descricao)
     pesquisa.ano = data.get('ano', pesquisa.ano)
 
+    # Atualiza as perguntas associadas à pesquisa
+    perguntas_data = data.get('perguntas', [])
+    if perguntas_data:
+        # Extrair os IDs das perguntas fornecidas no payload
+        perguntas_ids = [pergunta.get('id') for pergunta in perguntas_data if pergunta.get('id')]
+        
+        # Buscar as perguntas no banco de dados
+        perguntas_obj = Pergunta.query.filter(Pergunta.id.in_(perguntas_ids)).all()
+        
+        # Associar as perguntas encontradas à pesquisa
+        pesquisa.perguntas = perguntas_obj
+    
     try:
         db.session.commit()
-        return jsonify(pesquisa.to_dict()), 200
+        return jsonify(pesquisa.to_dict(include_perguntas=True)), 200
     except IntegrityError:
         db.session.rollback()
         return jsonify({'error': 'Erro ao atualizar pesquisa'}), 400
@@ -537,11 +571,23 @@ def delete_pesquisa(id):
         db.session.rollback()
         return jsonify({'error': 'Erro ao excluir pesquisa'}), 400
 
-# Rota para listar todas as perguntas de uma pesquisa específica
-@bp.route('/pesquisa/<int:pesquisa_id>/perguntas', methods=['GET'])
-def get_perguntas_by_pesquisa(pesquisa_id):
-    perguntas = Pergunta.query.filter_by(pesquisa_id=pesquisa_id).all()
-    return jsonify([pergunta.to_dict() for pergunta in perguntas])
+@bp.route('/pesquisa/fechada', methods=['GET'])
+def get_pesquisa_fechada():
+    pesquisa = Pesquisa.query.filter_by(is_pesquisa_fechada=1).first()
+    if not pesquisa:
+        return jsonify({'error': 'Nenhuma pesquisa fechada encontrada'}), 404
+
+    # Inclui as opções de resposta de cada pergunta
+    return jsonify(pesquisa.to_dict(include_perguntas=True))
+
+@bp.route('/pesquisa/anonima', methods=['GET'])
+def get_pesquisa_anonima():
+    pesquisa = Pesquisa.query.filter_by(is_pesquisa_anonima=1).first()
+    if not pesquisa:
+        return jsonify({'error': 'Nenhuma pesquisa anonima encontrada'}), 404
+
+    # Inclui as opções de resposta de cada pergunta
+    return jsonify(pesquisa.to_dict(include_perguntas=True))
 
 # Rota para listar todas as respostas de uma pesquisa específica
 @bp.route('/pesquisa/<int:pesquisa_id>/respostas', methods=['GET'])
@@ -580,3 +626,36 @@ def create_or_update_resposta_by_pesquisa(pesquisa_id, colaborador_id):
     except IntegrityError:
         db.session.rollback()
         return jsonify({'error': 'Erro ao salvar resposta'}), 400
+    
+@bp.route('/pesquisa/marcar/<int:id>', methods=['PATCH'])
+def marcar_pesquisa(id):
+    data = request.get_json()
+
+    # Verificar se a pesquisa existe
+    pesquisa = Pesquisa.query.get_or_404(id)
+
+    # Definir os campos a serem atualizados
+    is_fechada = data.get('is_pesquisa_fechada', None)
+    is_anonima = data.get('is_pesquisa_anonima', None)
+
+    try:
+        # Desmarcar todas as outras pesquisas como fechadas/anônimas
+        if is_fechada is not None:
+            # Desmarca todas as outras pesquisas
+            Pesquisa.query.update({Pesquisa.is_pesquisa_fechada: None})
+            # Marca a pesquisa atual como fechada
+            pesquisa.is_pesquisa_fechada = is_fechada
+
+        if is_anonima is not None:
+            # Desmarca todas as outras pesquisas
+            Pesquisa.query.update({Pesquisa.is_pesquisa_anonima: None})
+            # Marca a pesquisa atual como anônima
+            pesquisa.is_pesquisa_anonima = is_anonima
+
+        # Comitar as alterações
+        db.session.commit()
+        return jsonify(pesquisa.to_dict()), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
