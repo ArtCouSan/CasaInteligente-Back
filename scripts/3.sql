@@ -95,7 +95,7 @@ INSERT INTO pergunta (texto) VALUES
 INSERT INTO perfil(nome) VALUES
 ('colaborador'),
 ('dp'),
-('desenvolvedor')
+('desenvolvedor');
 
 -- Insere as opções de resposta para a Pergunta 1
 INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 

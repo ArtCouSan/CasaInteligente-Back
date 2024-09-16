@@ -60,13 +60,13 @@ INSERT INTO colaborador (
 -- Inserindo predição para o colaborador recém-criado
 INSERT INTO colaborador_predicao (
     colaborador_id,
-    predicao,
+    evasao,
     motivo,
     sugestao,
     observacao
 ) VALUES (
     1,                                                      -- ID do colaborador recém-criado
-    85,                                                     -- Predição (exemplo de predição)
+    'Sim',                                                    -- Predição (exemplo de predição)
     'Alta chance de promoção devido ao excelente desempenho.', -- Motivo
     'Considerar promoção para a posição de Gerente de Projeto.', -- Sugestão
     'Observação adicional sobre o colaborador.'              -- Observação
@@ -138,13 +138,13 @@ INSERT INTO colaborador (
 -- Inserindo predição para o colaborador recém-criado
 INSERT INTO colaborador_predicao (
     colaborador_id,
-    predicao,
+    evasao,
     motivo,
     sugestao,
     observacao
 ) VALUES (
     2,                                                      -- ID do colaborador recém-criado
-    85,                                                     -- Predição (exemplo de predição)
+    'Sim',                                                     -- Predição (exemplo de predição)
     'Alta chance de promoção devido ao excelente desempenho.', -- Motivo
     'Considerar promoção para a posição de Gerente de Projeto.', -- Sugestão
     'Observação adicional sobre o colaborador.'              -- Observação
@@ -214,25 +214,16 @@ INSERT INTO colaborador (
 -- Inserindo predição para o colaborador recém-criado
 INSERT INTO colaborador_predicao (
     colaborador_id,
-    predicao,
+    evasao,
     motivo,
     sugestao,
     observacao
 ) VALUES (
-    3,                                                      -- ID do colaborador recém-criado
-    85,                                                     -- Predição (exemplo de predição)
+    3,                                                     -- ID do colaborador recém-criado
+    'Sim',                                                     -- Predição (exemplo de predição)
     'Alta chance de promoção devido ao excelente desempenho.', -- Motivo
     'Considerar promoção para a posição de Gerente de Projeto.', -- Sugestão
     'Observação adicional sobre o colaborador.'              -- Observação
 );
 
 INSERT INTO colaborador_perfil (colaborador_id, perfil_id) VALUES (3, 2);  -- Perfil de colaborador
-
-
-LOAD DATA INFILE 'CasaInteligente-Back\base_traduzida.csv'
-INTO TABLE colaborador
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
-IGNORE 1 LINES
-(idade, genero_id, estado_civil_id, formacao_id, departamento_id, faixa_salarial_id, cargo_id, tempo_trabalho, quantidade_empresas_trabalhou, quantidade_anos_trabalhados_anteriormente, faculdade_id, aumento_percentual_do_salario, distancia_de_casa, anos_com_o_atual_gestor, anos_na_empresa, cpf);

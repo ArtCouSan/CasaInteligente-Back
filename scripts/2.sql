@@ -105,7 +105,7 @@ CREATE TABLE colaborador_perfil (
 CREATE TABLE colaborador_predicao (
     id INT AUTO_INCREMENT PRIMARY KEY,
     colaborador_id INT,
-    predicao INT DEFAULT 0,                                        -- Valor padrão 0
+    evasao TEXT DEFAULT '',                                        -- Valor padrão 0
     motivo TEXT DEFAULT '',                                        -- Valor padrão é string vazia
     sugestao TEXT DEFAULT '',
     observacao TEXT DEFAULT '',
