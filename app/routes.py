@@ -312,7 +312,8 @@ def create_or_update_resposta(colaborador_id):
         # Tente encontrar uma resposta existente com a mesma combinação de colaborador, pergunta, trimestre e ano
         resposta_existente = Resposta.query.filter_by(
             colaborador_id=colaborador_id,
-            pergunta_id=data['pergunta_id']
+            pergunta_id=data['pergunta_id'],
+            pesquisa_id=data['pesquisa_id']
         ).first()
 
         if resposta_existente:

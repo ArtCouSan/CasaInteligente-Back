@@ -128,15 +128,25 @@ CREATE TABLE pesquisa (
     is_pesquisa_anonima INT DEFAULT NULL
 ) ENGINE=InnoDB;
 
-
-CREATE TABLE resposta (
+CREATE TABLE resposta_anonima (
     id INT AUTO_INCREMENT PRIMARY KEY,
     colaborador_id INT NOT NULL,
     pesquisa_id INT NOT NULL,            
     pergunta_id INT NOT NULL,
     nota TINYINT NOT NULL,   
-    is_pesquisa_fechada INT DEFAULT NULL,
-    is_pesquisa_anonima INT DEFAULT NULL,
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE,
+    FOREIGN KEY (pesquisa_id) REFERENCES pesquisa(id) ON DELETE CASCADE,
+    FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE,
+    UNIQUE (colaborador_id, pesquisa_id, pergunta_id) 
+) ENGINE=InnoDB;
+
+CREATE TABLE resposta_fechada (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    colaborador_id INT NOT NULL,
+    pesquisa_id INT NOT NULL,            
+    pergunta_id INT NOT NULL,
+    nota TINYINT NOT NULL,   
     data_hora DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE,
     FOREIGN KEY (pesquisa_id) REFERENCES pesquisa(id) ON DELETE CASCADE,

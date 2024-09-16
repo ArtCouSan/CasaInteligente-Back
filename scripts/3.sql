@@ -97,42 +97,78 @@ INSERT INTO perfil(nome) VALUES
 ('dp'),
 ('desenvolvedor');
 
--- Insere as opções de resposta para a Pergunta 1
+-- Pergunta 1: Nível de satisfação com o ambiente de trabalho
 INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Concordo totalmente', 5, 1),
-('Concordo', 4, 1),
+('Muito satisfeito', 5, 1),
+('Satisfeito', 4, 1),
 ('Neutro', 3, 1),
-('Discordo', 2, 1),
-('Discordo totalmente', 1, 1);
+('Insatisfeito', 2, 1),
+('Muito insatisfeito', 1, 1);
 
--- Insere as opções de resposta para a Pergunta 2
+-- Pergunta 2: Nível de envolvimento com tarefas e responsabilidades
 INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Concordo totalmente', 5, 2),
-('Concordo', 4, 2),
+('Totalmente envolvido', 5, 2),
+('Bem envolvido', 4, 2),
 ('Neutro', 3, 2),
-('Discordo', 2, 2),
-('Discordo totalmente', 1, 2);
+('Pouco envolvido', 2, 2),
+('Nada envolvido', 1, 2);
 
--- Insere as opções de resposta para a Pergunta 3
+-- Pergunta 3: Satisfação com o trabalho atual
 INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Concordo totalmente', 5, 3),
-('Concordo', 4, 3),
+('Muito satisfeito', 5, 3),
+('Satisfeito', 4, 3),
 ('Neutro', 3, 3),
-('Discordo', 2, 3),
-('Discordo totalmente', 1, 3);
+('Insatisfeito', 2, 3),
+('Muito insatisfeito', 1, 3);
 
--- Insere as opções de resposta para a Pergunta 4
+-- Pergunta 4: Satisfação com os relacionamentos profissionais na empresa
 INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Concordo totalmente', 5, 4),
-('Concordo', 4, 4),
+('Muito satisfeito', 5, 4),
+('Satisfeito', 4, 4),
 ('Neutro', 3, 4),
-('Discordo', 2, 4),
-('Discordo totalmente', 1, 4);
+('Insatisfeito', 2, 4),
+('Muito insatisfeito', 1, 4);
 
--- Insere as opções de resposta para a Pergunta 5
+-- Pergunta 5: Satisfação com o equilíbrio entre vida profissional e pessoal
 INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Concordo totalmente', 5, 5),
-('Concordo', 4, 5),
+('Muito equilibrado', 5, 5),
+('Equilibrado', 4, 5),
 ('Neutro', 3, 5),
-('Discordo', 2, 5),
-('Discordo totalmente', 1, 5);
+('Desequilibrado', 2, 5),
+('Muito desequilibrado', 1, 5);
+
+INSERT INTO pesquisa (titulo, descricao, ano, is_pesquisa_fechada, is_pesquisa_anonima)
+VALUES 
+('Pulso 1', 'Pesquisa trimestral sobre a satisfação dos colaboradores no ambiente de trabalho', 2023, 0, 1);
+
+INSERT INTO pesquisa (titulo, descricao, ano, is_pesquisa_fechada, is_pesquisa_anonima)
+VALUES 
+('Pulso 2', 'Avaliação do clima organizacional no primeiro semestre', 2023, 1, 0);
+
+INSERT INTO pesquisa (titulo, descricao, ano, is_pesquisa_fechada, is_pesquisa_anonima)
+VALUES 
+('Pulso 3', 'Pesquisa para avaliar o engajamento dos colaboradores com as metas da empresa', 2023, 0, 0);
+
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id)
+VALUES
+(1, 1),  
+(1, 2), 
+(1, 3), 
+(1, 4), 
+(1, 5); 
+
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id)
+VALUES
+(2, 1),  
+(2, 2), 
+(2, 3), 
+(2, 4), 
+(2, 5); 
+
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id)
+VALUES
+(3, 1),  
+(3, 2), 
+(3, 3), 
+(3, 4), 
+(3, 5); 

@@ -242,12 +242,11 @@ class Pesquisa(db.Model):
     titulo = db.Column(db.String(255), nullable=False)
     descricao = db.Column(db.Text, default='')
     ano = db.Column(db.Integer, nullable=False)
-    is_pesquisa_fechada = db.Column(db.Integer, nullable=True)
-    is_pesquisa_anonima = db.Column(db.Integer, nullable=True)
 
     # Relacionamento com Resposta
-    respostas_pesquisa = db.relationship("Resposta", back_populates="pesquisa", cascade="all, delete-orphan")
-    
+    respostas_anonima_pesquisa = db.relationship("RespostaAnonima", back_populates="pesquisa", cascade="all, delete-orphan")
+    respostas_fechada_pesquisa = db.relationship("RespostaFechada", back_populates="pesquisa", cascade="all, delete-orphan")
+
     # Relacionamento many-to-many com Pergunta através de PesquisaPergunta
     pesquisa_perguntas = db.relationship("PesquisaPergunta", back_populates="pesquisa", cascade="all, delete-orphan", overlaps="pesquisas,pergunta")
     perguntas = db.relationship("Pergunta", secondary='pesquisa_pergunta', back_populates="pesquisas", overlaps="pesquisa,pesquisa_perguntas")
@@ -257,12 +256,10 @@ class Pesquisa(db.Model):
             'id': self.id,
             'titulo': self.titulo,
             'descricao': self.descricao,
-            'ano': self.ano,
-            'is_pesquisa_fechada': self.is_pesquisa_fechada,
-            'is_pesquisa_anonima': self.is_pesquisa_anonima
+            'ano': self.ano
         }
         if include_perguntas:
-            data['perguntas'] = [pergunta.to_dict() for pergunta in self.perguntas]
+            data['perguntas'] = [pergunta.to_dict(include_respostas=True) for pergunta in self.perguntas]
         return data
 
 class Pergunta(db.Model):
@@ -301,17 +298,13 @@ class RespostaOpcao(db.Model):
             'nota': self.nota
         }
 
-class Resposta(db.Model):
-    __tablename__ = 'resposta'
+class RespostaAnonima(db.Model):
+    __tablename__ = 'resposta_anonima'
     id = db.Column(db.Integer, primary_key=True, index=True)
     colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id', ondelete='CASCADE'), nullable=False)
     pesquisa_id = db.Column(db.Integer, db.ForeignKey('pesquisa.id', ondelete='CASCADE'), nullable=False)
     pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id', ondelete='CASCADE'), nullable=False)
     nota = db.Column(db.Integer, nullable=False)
-    is_pesquisa_fechada = db.Column(db.Integer, nullable=True)
-    is_pesquisa_anonima = db.Column(db.Integer, nullable=True)
-    
-    # Nova coluna de data e hora que pega o valor atual do sistema no momento da criação
     data_hora = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     colaborador = db.relationship("Colaborador", back_populates="respostas_colaborador")
@@ -325,8 +318,29 @@ class Resposta(db.Model):
             'pesquisa_id': self.pesquisa_id,
             'pergunta_id': self.pergunta_id,
             'nota': self.nota,
-            'is_pesquisa_fechada': self.is_pesquisa_fechada,
-            'is_pesquisa_anonima': self.is_pesquisa_anonima,
+            'data_hora': self.data_hora.strftime('%Y-%m-%d %H:%M:%S')  # Formatação da data e hora para o formato desejado
+        }
+
+class RespostaFechada(db.Model):
+    __tablename__ = 'resposta_fechada'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id', ondelete='CASCADE'), nullable=False)
+    pesquisa_id = db.Column(db.Integer, db.ForeignKey('pesquisa.id', ondelete='CASCADE'), nullable=False)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id', ondelete='CASCADE'), nullable=False)
+    nota = db.Column(db.Integer, nullable=False)
+    data_hora = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    colaborador = db.relationship("Colaborador", back_populates="respostas_colaborador")
+    pergunta = db.relationship("Pergunta", backref="respostas")
+    pesquisa = db.relationship("Pesquisa", back_populates="respostas_pesquisa")
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'colaborador_id': self.colaborador_id,
+            'pesquisa_id': self.pesquisa_id,
+            'pergunta_id': self.pergunta_id,
+            'nota': self.nota,
             'data_hora': self.data_hora.strftime('%Y-%m-%d %H:%M:%S')  # Formatação da data e hora para o formato desejado
         }
 
@@ -334,7 +348,7 @@ class AnaliseColaborador(db.Model):
     __tablename__ = 'colaborador_predicao'
     id = db.Column(db.Integer, primary_key=True)
     colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id'), nullable=False)
-    predicao = db.Column(db.Integer, nullable=False)
+    evasao = db.Column(db.Text, nullable=False)
     motivo = db.Column(db.Text, nullable=False)
     sugestao = db.Column(db.Text, nullable=False)
     observacao = db.Column(db.Text, nullable=True)
@@ -345,7 +359,7 @@ class AnaliseColaborador(db.Model):
         return {
             'colaborador': self.colaborador.to_dict(),
             'motivo': self.motivo,
-            'predicao': self.predicao,
+            'evasao': self.evasao,
             'sugestao': self.sugestao,
             'observacao': self.observacao
         }
@@ -353,7 +367,7 @@ class AnaliseColaborador(db.Model):
     def to_dict_predicao(self):
         return {
             'motivo': self.motivo,
-            'predicao': self.predicao,
+            'evasao': self.evasao,
             'sugestao': self.sugestao,
             'observacao': self.observacao
         }
