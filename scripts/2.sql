@@ -2,7 +2,7 @@ USE colaborador_db;
 
 CREATE TABLE genero (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    descricao VARCHAR(50) DEFAULT ''  -- Valor padrão é string vazia
+    descricao VARCHAR(50) DEFAULT '' 
 ) ENGINE=InnoDB;
 
 CREATE TABLE estado_civil (
@@ -111,7 +111,6 @@ CREATE TABLE colaborador_predicao (
     observacao TEXT DEFAULT '',
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
-
 
 CREATE TABLE pergunta (
     id INT AUTO_INCREMENT PRIMARY KEY,

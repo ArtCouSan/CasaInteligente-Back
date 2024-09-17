@@ -142,7 +142,8 @@ class Colaborador(db.Model):
     faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
     cargo = db.relationship('Cargo', backref='colaboradores')
     nivel_escolaridade = db.relationship('NivelEscolaridade', backref='colaboradores')
-    respostas_colaborador = db.relationship("Resposta", back_populates="colaborador", cascade="all, delete-orphan")
+    respostas_anonima = db.relationship("RespostaAnonima", back_populates="colaborador", cascade="all, delete-orphan")
+    respostas_fechada = db.relationship("RespostaFechada", back_populates="colaborador", cascade="all, delete-orphan")
     perfis = db.relationship('Perfil', secondary='colaborador_perfil', backref='colaboradores')
 
     def to_dict(self):
@@ -175,38 +176,31 @@ class Colaborador(db.Model):
             'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
             'exFuncionario': self.ex_funcionario,
             'perfis': [perfil.to_dict() for perfil in self.perfis],
-            'respostas': [resposta.to_dict() for resposta in self.respostas_colaborador]  # Inclui as respostas associadas
+            'respostas_anonima': [resposta.to_dict() for resposta in self.respostas_anonima],
+            'respostas_fechada': [resposta.to_dict() for resposta in self.respostas_fechada]
         }
     
     def to_dict_somente_dados(self):
         return {
             'nome': self.nome,
-            'cpf': self.cpf,
             'idade': self.idade,
-            'genero': {'id': self.genero.id, 'descricao': self.genero.descricao},
-            'estadoCivil': {'id': self.estado_civil.id, 'descricao': self.estado_civil.descricao},
-            'telefone': self.telefone,
-            'email': self.email,
-            'formacao': {'id': self.formacao.id, 'descricao': self.formacao.descricao},
-            'faculdade': {'id': self.faculdade.id, 'nome': self.faculdade.nome},
-            'endereco': self.endereco,
-            'numero': self.numero,
-            'complemento': self.complemento,
-            'bairro': self.bairro,
+            'genero': {'descricao': self.genero.descricao},
+            'estadoCivil': {'descricao': self.estado_civil.descricao},
+            'formacao': {'descricao': self.formacao.descricao},
+            'faculdade': {'nome': self.faculdade.nome},
             'cidade': self.cidade,
             'estado': self.estado,
             'cep': self.cep,
-            'departamento': {'id': self.departamento.id, 'nome': self.departamento.nome},
-            'setor': {'id': self.setor.id, 'nome': self.setor.nome},
-            'faixaSalarial': {'id': self.faixa_salarial.id, 'descricao': self.faixa_salarial.descricao},
-            'cargo': {'id': self.cargo.id, 'nome': self.cargo.nome},
+            'departamento': {'nome': self.departamento.nome},
+            'setor': {'nome': self.setor.nome},
+            'faixaSalarial': { 'descricao': self.faixa_salarial.descricao},
+            'cargo': {'nome': self.cargo.nome},
             'gerente': self.gerente,
             'tempoTrabalho': self.tempo_trabalho,
             'quantidadeEmpresasTrabalhou': self.quantidade_empresas_trabalhou,
             'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
-            'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
-            'exFuncionario': self.ex_funcionario,
-            'respostas': [resposta.to_dict() for resposta in self.respostas] 
+            'nivelEscolaridade': {'descricao': self.nivel_escolaridade.descricao},
+            'exFuncionario': self.ex_funcionario
         }
 
 # Perfil Table
@@ -242,6 +236,8 @@ class Pesquisa(db.Model):
     titulo = db.Column(db.String(255), nullable=False)
     descricao = db.Column(db.Text, default='')
     ano = db.Column(db.Integer, nullable=False)
+    is_pesquisa_fechada = db.Column(db.Integer, nullable=True)
+    is_pesquisa_anonima = db.Column(db.Integer, nullable=True)
 
     # Relacionamento com Resposta
     respostas_anonima_pesquisa = db.relationship("RespostaAnonima", back_populates="pesquisa", cascade="all, delete-orphan")
@@ -307,9 +303,9 @@ class RespostaAnonima(db.Model):
     nota = db.Column(db.Integer, nullable=False)
     data_hora = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    colaborador = db.relationship("Colaborador", back_populates="respostas_colaborador")
-    pergunta = db.relationship("Pergunta", backref="respostas")
-    pesquisa = db.relationship("Pesquisa", back_populates="respostas_pesquisa")
+    colaborador = db.relationship("Colaborador", back_populates="respostas_anonima")
+    pergunta = db.relationship("Pergunta", backref="respostas_anonima")
+    pesquisa = db.relationship("Pesquisa", back_populates="respostas_anonima_pesquisa")
 
     def to_dict(self):
         return {
@@ -330,9 +326,9 @@ class RespostaFechada(db.Model):
     nota = db.Column(db.Integer, nullable=False)
     data_hora = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    colaborador = db.relationship("Colaborador", back_populates="respostas_colaborador")
-    pergunta = db.relationship("Pergunta", backref="respostas")
-    pesquisa = db.relationship("Pesquisa", back_populates="respostas_pesquisa")
+    colaborador = db.relationship("Colaborador", back_populates="respostas_fechada")
+    pergunta = db.relationship("Pergunta", backref="respostas_fechada")
+    pesquisa = db.relationship("Pesquisa", back_populates="respostas_fechada_pesquisa")
 
     def to_dict(self):
         return {
