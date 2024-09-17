@@ -2,7 +2,7 @@ USE colaborador_db;
 
 CREATE TABLE genero (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    descricao VARCHAR(50) DEFAULT ''  -- Valor padrão é string vazia
+    descricao VARCHAR(50) DEFAULT '' 
 ) ENGINE=InnoDB;
 
 CREATE TABLE estado_civil (
@@ -105,32 +105,48 @@ CREATE TABLE colaborador_perfil (
 CREATE TABLE colaborador_predicao (
     id INT AUTO_INCREMENT PRIMARY KEY,
     colaborador_id INT,
-    predicao INT DEFAULT 0,                                        -- Valor padrão 0
+    evasao TEXT DEFAULT '',                                        -- Valor padrão 0
     motivo TEXT DEFAULT '',                                        -- Valor padrão é string vazia
     sugestao TEXT DEFAULT '',
     observacao TEXT DEFAULT '',
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-
 CREATE TABLE pergunta (
     id INT AUTO_INCREMENT PRIMARY KEY,
     texto VARCHAR(255) NOT NULL
 ) ENGINE=InnoDB;
 
+
 CREATE TABLE pesquisa (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,      
     descricao TEXT DEFAULT '',      
-    ano YEAR NOT NULL
+    ano YEAR NOT NULL,
+    is_pesquisa_fechada INT DEFAULT NULL,
+    is_pesquisa_anonima INT DEFAULT NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE resposta (
+CREATE TABLE resposta_anonima (
     id INT AUTO_INCREMENT PRIMARY KEY,
     colaborador_id INT NOT NULL,
     pesquisa_id INT NOT NULL,            
     pergunta_id INT NOT NULL,
-    nota TINYINT NOT NULL,      
+    nota TINYINT NOT NULL,   
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE,
+    FOREIGN KEY (pesquisa_id) REFERENCES pesquisa(id) ON DELETE CASCADE,
+    FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE,
+    UNIQUE (colaborador_id, pesquisa_id, pergunta_id) 
+) ENGINE=InnoDB;
+
+CREATE TABLE resposta_fechada (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    colaborador_id INT NOT NULL,
+    pesquisa_id INT NOT NULL,            
+    pergunta_id INT NOT NULL,
+    nota TINYINT NOT NULL,   
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE,
     FOREIGN KEY (pesquisa_id) REFERENCES pesquisa(id) ON DELETE CASCADE,
     FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE,
@@ -140,7 +156,15 @@ CREATE TABLE resposta (
 CREATE TABLE resposta_opcao (
     id INT AUTO_INCREMENT PRIMARY KEY,
     texto VARCHAR(255) NOT NULL,
-    nota TINYINT NOT NULL,  -- Nota associada à opção de resposta
+    nota TINYINT NOT NULL, 
     pergunta_id INT NOT NULL,
+    FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE pesquisa_pergunta (
+    pesquisa_id INT NOT NULL,
+    pergunta_id INT NOT NULL,
+    PRIMARY KEY (pesquisa_id, pergunta_id),
+    FOREIGN KEY (pesquisa_id) REFERENCES pesquisa(id) ON DELETE CASCADE,
     FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

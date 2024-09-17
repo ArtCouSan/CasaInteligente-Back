@@ -6,7 +6,7 @@ from openai import OpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from app import mongo
-from app.models import AnaliseColaborador, Colaborador
+from app.models import AnaliseColaborador, Colaborador, Pesquisa, RespostaFechada, RespostaOpcao
 
 # Carrega a chave da API a partir do arquivo JSON
 with open('config.json', 'r') as file:
@@ -63,7 +63,6 @@ def fazer_pergunta(query, colaborador_id, num_messages=5):
 
     return completion.choices[0].message.content
 
-
 def gerar_contexto_colaborador(colaborador_id):
     # Recuperar o colaborador pelo ID
     colaborador = Colaborador.query.get(colaborador_id)
@@ -73,11 +72,42 @@ def gerar_contexto_colaborador(colaborador_id):
     # Recuperar análises preditivas do colaborador
     analises = AnaliseColaborador.query.filter_by(colaborador_id=colaborador_id).all()
 
+    # Recuperar pesquisas fechadas do colaborador e suas respectivas perguntas e respostas
+    pesquisas_fechadas = Pesquisa.query.join(RespostaFechada).filter(
+        RespostaFechada.colaborador_id == colaborador_id
+    ).all()
+
     # Criar o dicionário de contexto
     contexto = {
         'colaborador': colaborador.to_dict_somente_dados(),
         'analises': [analise.to_dict_predicao() for analise in analises],
-        'respostas': [resposta.to_dict() for resposta in colaborador.respostas]
+        'pesquisas_fechadas': [
+            {
+                'titulo': pesquisa.titulo,
+                'ano': pesquisa.ano,
+                'descricao': pesquisa.descricao,
+                'perguntas': [
+                    {
+                        'texto': pergunta.texto,
+                        'respostas': [
+                            {
+                                'nota': resposta.nota,
+                                'texto': resposta_opcao.texto
+                            }
+                            for resposta in RespostaFechada.query.filter_by(
+                                colaborador_id=colaborador_id,
+                                pergunta_id=pergunta.id,
+                                pesquisa_id=pesquisa.id
+                            ).all()
+                            for resposta_opcao in RespostaOpcao.query.filter_by(pergunta_id=pergunta.id).all()
+                            if resposta.nota == resposta_opcao.nota
+                        ]
+                    }
+                    for pergunta in pesquisa.perguntas
+                ]
+            }
+            for pesquisa in pesquisas_fechadas
+        ]
     }
 
     return contexto
