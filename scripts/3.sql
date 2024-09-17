@@ -22,7 +22,10 @@ INSERT INTO nivel_escolaridade (descricao) VALUES
 ('Ensino Médio - Completo'),
 ('Ensino Médio - Incompleto'),
 ('Ensino Superior - Completo'),
-('Ensino Superior - Incompleto');
+('Ensino Superior - Incompleto'),
+('Bacharelado'),
+('Mestrado'),
+('Doutorado');
 
 INSERT INTO faculdade (nome) VALUES 
 ('Não Respondido'),
@@ -34,13 +37,22 @@ INSERT INTO formacao (descricao) VALUES
 ('Não Respondido'),
 ('Ciência da Computação'),
 ('Engenharia de Software'),
-('Administração');
+('Administração'),
+('Ciências da Vida'),
+('Saude'),
+('Marketing'),
+('TI'),
+('Outros'),
+('RH');
 
 INSERT INTO departamento (nome) VALUES 
 ('Não Respondido'),
 ('Tecnologia da Informação'),
 ('Financeiro'),
-('Rercursos Humanos');
+('Rercursos Humanos')
+('Pesquisa e Desenvolvimento'),
+('Vendas');
+
 
 INSERT INTO setor (nome) VALUES 
 ('Não Respondido'),
@@ -83,7 +95,16 @@ INSERT INTO cargo (nome) VALUES
 ('Não Respondido'),
 ('Desenvolvedor'),
 ('Analista Financeiro'),
-('Gerente de TI');
+('Gerente de TI')
+('Executivo de Vendas'),
+('Pesquisador'),
+('Tecnico Laboratorial'),
+('Diretor de Manufatura'),
+('Representante de Saude'),
+('Representante de Vendas'),
+('Diretor de Pesquisa'),
+('Recursos Humanos');
+
 
 INSERT INTO pergunta (texto) VALUES 
 ('Qual é o seu nível de satisfação com o seu ambiente de trabalho?'),
