@@ -3,7 +3,7 @@ import mysql.connector
 from mysql.connector import Error
 
 # Carregar o CSV
-file_path = './base_traduzida.csv'
+file_path = './base_traduzida_2.csv'
 colaboradores_df = pd.read_csv(file_path, sep=';')
 
 # Conectar ao MySQL
@@ -25,7 +25,7 @@ try:
                 cpf, idade, genero_id, estado_civil_id, formacao_id, 
                 departamento_id, faixa_salarial_id, cargo_id, 
                 tempo_trabalho, quantidade_empresas_trabalhou, 
-                quantidade_anos_trabalhados_anteriormente, faculdade_id, 
+                quantidade_anos_trabalhados_anteriormente, nivel_escolaridade_id, 
                 aumento_percentual_do_salario, distancia_de_casa, 
                 anos_com_o_atual_gestor, anos_na_empresa
             )
@@ -36,16 +36,16 @@ try:
             cursor.execute(inserir_colaborador_query, (
                 row['cpf'],
                 row['idade'],
-                row['genero_id'] + 1,
-                row['estado_civil_id'] + 1, 
-                row['formacao_id'] + 1,
-                row['departamento_id'] + 1,
-                row['faixa_salarial_id'] + 1,
-                row['cargo_id'] + 1,
+                row['genero_id'],
+                row['estado_civil_id'], 
+                row['formacao_id'],
+                row['departamento_id'],
+                row['faixa_salarial_id'],
+                row['cargo_id'],
                 row['tempo_trabalho'],
                 row['quantidade_empresas_trabalhou'],
                 row['quantidade_anos_trabalhados_anteriormente'],
-                row['faculdade_id'] + 1,
+                row['nivel_escolaridade_id'],
                 row['aumento_percentual_do_salario'],
                 row['distancia_de_casa'],
                 row['anos_com_o_atual_gestor'],

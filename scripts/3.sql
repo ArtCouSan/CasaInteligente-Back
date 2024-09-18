@@ -49,7 +49,7 @@ INSERT INTO departamento (nome) VALUES
 ('Não Respondido'),
 ('Tecnologia da Informação'),
 ('Financeiro'),
-('Rercursos Humanos')
+('Rercursos Humanos'),
 ('Pesquisa e Desenvolvimento'),
 ('Vendas');
 
@@ -95,7 +95,7 @@ INSERT INTO cargo (nome) VALUES
 ('Não Respondido'),
 ('Desenvolvedor'),
 ('Analista Financeiro'),
-('Gerente de TI')
+('Gerente de TI'),
 ('Executivo de Vendas'),
 ('Pesquisador'),
 ('Tecnico Laboratorial'),
