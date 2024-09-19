@@ -30,10 +30,10 @@ CREATE TABLE setor (
     nome VARCHAR(100) DEFAULT ''
 ) ENGINE=InnoDB;
 
-CREATE TABLE faixa_salarial (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    descricao VARCHAR(50) DEFAULT ''
-) ENGINE=InnoDB;
+-- CREATE TABLE faixa_salarial (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     descricao VARCHAR(50) DEFAULT ''
+-- ) ENGINE=InnoDB;
 
 CREATE TABLE nivel_escolaridade (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -52,17 +52,17 @@ CREATE TABLE perfil (
 
 CREATE TABLE colaborador (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) DEFAULT '',                                  -- Valor padrão é string vazia
-    cpf VARCHAR(14) NOT NULL UNIQUE,                               -- CPF é obrigatório
-    idade INT DEFAULT 0,                                           -- Valor padrão 0
-    genero_id INT DEFAULT NULL,                                    -- Valor padrão NULL (se não definido)
+    nome VARCHAR(255) DEFAULT '',                                  
+    cpf VARCHAR(14) NOT NULL UNIQUE,                               
+    idade INT DEFAULT 0,                                           
+    genero_id INT DEFAULT NULL,                                    
     estado_civil_id INT DEFAULT NULL,
-    telefone VARCHAR(20) DEFAULT '',                               -- Valor padrão é string vazia
+    telefone VARCHAR(20) DEFAULT '',                              
     email VARCHAR(255) DEFAULT '',
-    senha_hash VARCHAR(255) NOT NULL,                              -- Senha continua obrigatória
+    senha_hash VARCHAR(255) NOT NULL,                              
     formacao_id INT DEFAULT NULL,
     faculdade_id INT DEFAULT NULL,
-    endereco VARCHAR(255) DEFAULT '',                              -- Valor padrão é string vazia
+    endereco VARCHAR(255) DEFAULT '',                              
     numero VARCHAR(10) DEFAULT '',
     complemento VARCHAR(255) DEFAULT '',
     bairro VARCHAR(100) DEFAULT '',
@@ -71,14 +71,15 @@ CREATE TABLE colaborador (
     cep VARCHAR(20) DEFAULT '',
     departamento_id INT DEFAULT NULL,
     setor_id INT DEFAULT NULL,
-    faixa_salarial_id INT DEFAULT NULL,
+    -- faixa_salarial_id INT DEFAULT NULL,
+    salario DECIMAL(15,2) DEFAULT 0,
     cargo_id INT DEFAULT NULL,
     gerente VARCHAR(100) DEFAULT '',
     tempo_trabalho VARCHAR(50) DEFAULT '',
-    quantidade_empresas_trabalhou INT DEFAULT 0,                   -- Valor padrão 0
-    quantidade_anos_trabalhados_anteriormente INT DEFAULT 0,        -- Valor padrão 0
+    quantidade_empresas_trabalhou INT DEFAULT 0,                   
+    quantidade_anos_trabalhados_anteriormente INT DEFAULT 0,       
     nivel_escolaridade_id INT DEFAULT NULL,
-    ex_funcionario BOOL DEFAULT 0,                                 -- Valor padrão 0 (falso)
+    ex_funcionario TINYINT(1) DEFAULT 0,                                
     aumento_percentual_do_salario INT DEFAULT NULL, 
     distancia_de_casa INT DEFAULT NULL, 
     anos_com_o_atual_gestor INT DEFAULT NULL, 
@@ -89,7 +90,7 @@ CREATE TABLE colaborador (
     FOREIGN KEY (faculdade_id) REFERENCES faculdade(id),
     FOREIGN KEY (departamento_id) REFERENCES departamento(id),
     FOREIGN KEY (setor_id) REFERENCES setor(id),
-    FOREIGN KEY (faixa_salarial_id) REFERENCES faixa_salarial(id),
+    -- FOREIGN KEY (faixa_salarial_id) REFERENCES faixa_salarial(id),
     FOREIGN KEY (cargo_id) REFERENCES cargo(id),
     FOREIGN KEY (nivel_escolaridade_id) REFERENCES nivel_escolaridade(id)
 ) ENGINE=InnoDB;
