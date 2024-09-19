@@ -4,7 +4,7 @@ import pandas as pd
 from werkzeug.utils import secure_filename
 import os
 from app import db
-from app.models import Cargo, Colaborador, Departamento, EstadoCivil, Faculdade, FaixaSalarial, Formacao, Genero, NivelEscolaridade, Setor
+from app.models import *
 
 # Carregar o modelo BERT e o tokenizer
 tokenizer = AutoTokenizer.from_pretrained('neuralmind/bert-base-portuguese-cased')
@@ -78,25 +78,25 @@ def normalizar_descricao(descricao, sinonimos):
     descricao_normalizada = calcular_similaridade(descricao, candidatos)
     return descricao_normalizada
 
-def parse_faixa_salarial(descricao):
-    """Extrai o valor mínimo e máximo de uma faixa salarial a partir da descrição."""
-    try:
-        faixa = descricao.replace('R$', '').replace(',', '').replace('.', '').split('-')
-        min_value = int(faixa[0].strip())
-        max_value = int(faixa[1].strip())
-        return min_value, max_value
-    except Exception as e:
-        raise ValueError(f"Erro ao parsear a faixa salarial: {descricao}. Detalhes: {e}")
+# def parse_faixa_salarial(descricao):
+#     """Extrai o valor mínimo e máximo de uma faixa salarial a partir da descrição."""
+#     try:
+#         faixa = descricao.replace('R$', '').replace(',', '').replace('.', '').split('-')
+#         min_value = int(faixa[0].strip())
+#         max_value = int(faixa[1].strip())
+#         return min_value, max_value
+#     except Exception as e:
+#         raise ValueError(f"Erro ao parsear a faixa salarial: {descricao}. Detalhes: {e}")
 
-def encaixar_faixa_salarial(salario):
-    """Encontra a faixa salarial correspondente a um salário."""
-    faixas = FaixaSalarial.query.all()
+# def encaixar_faixa_salarial(salario):
+#     """Encontra a faixa salarial correspondente a um salário."""
+#     faixas = FaixaSalarial.query.all()
     
-    for faixa in faixas:
-        min_value, max_value = parse_faixa_salarial(faixa.descricao)
-        if min_value <= salario <= max_value:
-            return faixa
-    return None
+#     for faixa in faixas:
+#         min_value, max_value = parse_faixa_salarial(faixa.descricao)
+#         if min_value <= salario <= max_value:
+#             return faixa
+#     return None
 
 def processar_csv(file):
     filename = secure_filename(file.filename)
@@ -131,7 +131,7 @@ def processar_csv(file):
             faculdade = Faculdade.query.filter_by(nome=row['faculdade']).first() if row['faculdade'] else Faculdade.query.get(1)
             departamento = Departamento.query.filter_by(nome=row['departamento']).first() if row['departamento'] else Departamento.query.get(1)
             setor = Setor.query.filter_by(nome=row['setor']).first() if row['setor'] else Setor.query.get(1)
-            faixa_salarial = encaixar_faixa_salarial(row['salario']) if row['salario'] else FaixaSalarial.query.get(1)
+            # faixa_salarial = encaixar_faixa_salarial(row['salario']) if row['salario'] else FaixaSalarial.query.get(1)
             cargo = Cargo.query.filter_by(nome=row['cargo']).first() if row['cargo'] else Cargo.query.get(1)
             nivel_escolaridade = NivelEscolaridade.query.filter_by(descricao=row['nivelEscolaridade']).first() if row['nivelEscolaridade'] else NivelEscolaridade.query.get(1)
 
@@ -154,7 +154,8 @@ def processar_csv(file):
                 cep=row['cep'],
                 departamento=departamento,
                 setor=setor,
-                faixa_salarial=faixa_salarial,
+                # faixa_salarial=faixa_salarial,
+                salario=row['salario'],
                 cargo=cargo,
                 gerente=row['gerente'],
                 tempo_trabalho=row['tempoTrabalho'],

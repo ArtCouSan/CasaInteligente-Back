@@ -69,16 +69,16 @@ class Setor(db.Model):
             'nome': self.nome
         }
 
-# Faixa Salarial Table
-class FaixaSalarial(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    descricao = db.Column(db.String(50), default='')
+# # Faixa Salarial Table
+# class FaixaSalarial(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     descricao = db.Column(db.String(50), default='')
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'descricao': self.descricao
-        }
+#     def to_dict(self):
+#         return {
+#             'id': self.id,
+#             'descricao': self.descricao
+#         }
 
 # Nivel Escolaridade Table
 class NivelEscolaridade(db.Model):
@@ -124,7 +124,8 @@ class Colaborador(db.Model):
     cep = db.Column(db.String(20), default='')
     departamento_id = db.Column(db.Integer, db.ForeignKey('departamento.id'), nullable=True)
     setor_id = db.Column(db.Integer, db.ForeignKey('setor.id'), nullable=True)
-    faixa_salarial_id = db.Column(db.Integer, db.ForeignKey('faixa_salarial.id'), nullable=True)
+    # faixa_salarial_id = db.Column(db.Integer, db.ForeignKey('faixa_salarial.id'), nullable=True)
+    salario = db.Column(db.DECIMAL, default=0)
     cargo_id = db.Column(db.Integer, db.ForeignKey('cargo.id'), nullable=True)
     gerente = db.Column(db.String(100), default='')
     tempo_trabalho = db.Column(db.String(50), default='')
@@ -139,7 +140,7 @@ class Colaborador(db.Model):
     faculdade = db.relationship('Faculdade', backref='colaboradores')
     departamento = db.relationship('Departamento', backref='colaboradores')
     setor = db.relationship('Setor', backref='colaboradores')
-    faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
+    # faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
     cargo = db.relationship('Cargo', backref='colaboradores')
     nivel_escolaridade = db.relationship('NivelEscolaridade', backref='colaboradores')
     respostas_anonima = db.relationship("RespostaAnonima", back_populates="colaborador", cascade="all, delete-orphan")
@@ -167,7 +168,8 @@ class Colaborador(db.Model):
             'faculdade': {'id': self.faculdade.id, 'nome': self.faculdade.nome},
             'departamento': {'id': self.departamento.id, 'nome': self.departamento.nome},
             'setor': {'id': self.setor.id, 'nome': self.setor.nome},
-            'faixaSalarial': {'id': self.faixa_salarial.id, 'descricao': self.faixa_salarial.descricao},
+            # 'faixaSalarial': {'id': self.faixa_salarial.id, 'descricao': self.faixa_salarial.descricao},
+            'salario': self.salario,
             'cargo': {'id': self.cargo.id, 'nome': self.cargo.nome},
             'gerente': self.gerente,
             'tempoTrabalho': self.tempo_trabalho,
@@ -193,7 +195,8 @@ class Colaborador(db.Model):
             'cep': self.cep,
             'departamento': {'nome': self.departamento.nome},
             'setor': {'nome': self.setor.nome},
-            'faixaSalarial': { 'descricao': self.faixa_salarial.descricao},
+            # 'faixaSalarial': { 'descricao': self.faixa_salarial.descricao},
+            'salario': self.salario,
             'cargo': {'nome': self.cargo.nome},
             'gerente': self.gerente,
             'tempoTrabalho': self.tempo_trabalho,

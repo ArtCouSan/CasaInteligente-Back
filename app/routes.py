@@ -43,7 +43,8 @@ def create_colaborador():
         cep=data.get('cep', ''),
         departamento_id=data.get('departamento', {}).get('id', 1),
         setor_id=data.get('setor', {}).get('id', 1),
-        faixa_salarial_id=data.get('faixaSalarial', {}).get('id', 1),
+        # faixa_salarial_id=data.get('faixaSalarial', {}).get('id', 1),
+        salario=data.get('salario', 0),
         cargo_id=data.get('cargo', {}).get('id', 1),
         gerente=data.get('gerente', ''),
         tempo_trabalho=data.get('tempoTrabalho', ''),
@@ -81,7 +82,8 @@ def update_colaborador(id):
     colaborador.cep = data.get('cep', colaborador.cep)
     colaborador.departamento_id = data.get('departamento', {}).get('id', colaborador.departamento_id or 1)
     colaborador.setor_id = data.get('setor', {}).get('id', colaborador.setor_id or 1)
-    colaborador.faixa_salarial_id = data.get('faixaSalarial', {}).get('id', colaborador.faixa_salarial_id or 1)
+    # colaborador.faixa_salarial_id = data.get('faixaSalarial', {}).get('id', colaborador.faixa_salarial_id or 1)
+    colaborador.salario = data.get('salario', colaborador.salario)
     colaborador.cargo_id = data.get('cargo', {}).get('id', colaborador.cargo_id or 1)
     colaborador.gerente = data.get('gerente', colaborador.gerente)
     colaborador.tempo_trabalho = data.get('tempoTrabalho', colaborador.tempo_trabalho)
@@ -188,10 +190,10 @@ def listar_cargos():
     cargos = Cargo.query.all()
     return jsonify([cargo.to_dict() for cargo in cargos])
 
-@bp.route('/faixas-salariais', methods=['GET'])
-def listar_faixas_salariais():
-    faixas_salariais = FaixaSalarial.query.all()
-    return jsonify([faixa_salarial.to_dict() for faixa_salarial in faixas_salariais])
+# @bp.route('/faixas-salariais', methods=['GET'])
+# def listar_faixas_salariais():
+#     faixas_salariais = FaixaSalarial.query.all()
+#     return jsonify([faixa_salarial.to_dict() for faixa_salarial in faixas_salariais])
 
 # Rota para listar todas as perguntas
 @bp.route('/pergunta', methods=['GET'])
