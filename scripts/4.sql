@@ -230,7 +230,7 @@ INSERT INTO colaborador_predicao (
 INSERT INTO colaborador_perfil (colaborador_id, perfil_id) VALUES (3, 2);  -- Perfil de colaborador
 
 
-LOAD DATA INFILE 'CasaInteligente-Back\base_traduzida_2.csv'
+LOAD DATA INFILE 'CasaInteligente-Back\base_traduzida_3.csv'
 INTO TABLE colaborador
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'

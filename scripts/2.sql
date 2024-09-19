@@ -84,6 +84,7 @@ CREATE TABLE colaborador (
     distancia_de_casa INT DEFAULT NULL, 
     anos_com_o_atual_gestor INT DEFAULT NULL, 
     anos_na_empresa INT DEFAULT NULL,
+    satisfacao_trabalho INT DEFAULT NULL,
     FOREIGN KEY (genero_id) REFERENCES genero(id),
     FOREIGN KEY (estado_civil_id) REFERENCES estado_civil(id),
     FOREIGN KEY (formacao_id) REFERENCES formacao(id),
