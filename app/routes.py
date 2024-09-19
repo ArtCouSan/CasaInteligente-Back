@@ -693,7 +693,7 @@ def get_pesquisas_fechadas_com_respostas(colaborador_id):
 
         # Verifica se encontrou pesquisas
         if not pesquisas_fechadas:
-            return jsonify({'message': 'Nenhuma pesquisa respondida encontrada para o colaborador.'}), 404
+            return jsonify([]), 200
 
         resultado = []
         for pesquisa in pesquisas_fechadas:
