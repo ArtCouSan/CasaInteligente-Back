@@ -19,14 +19,20 @@ INSERT INTO colaborador (
     cep, 
     departamento_id, 
     setor_id, 
-    faixa_salarial_id, 
+    salario, 
     cargo_id, 
     gerente, 
     tempo_trabalho, 
     quantidade_empresas_trabalhou, 
     quantidade_anos_trabalhados_anteriormente, 
     nivel_escolaridade_id, 
-    ex_funcionario
+    ex_funcionario,
+    viagem_trabalho_id,
+    distancia_casa,
+    quantidade_anos_atual_gestor,
+    quantidade_anos_na_empresa,
+    quantidade_horas_treinamento_ano,
+    porcentagem_ultimo_aumento
 ) VALUES (
     'Arthur',                        -- Nome
     '0',                    -- CPF
@@ -47,14 +53,20 @@ INSERT INTO colaborador (
     '01000-000',                         -- CEP
     1,                                   -- Departamento (1: TI)
     1,                                   -- Setor (1: Desenvolvimento)
-    3,                                   -- Faixa Salarial (3: R$ 3.001 - R$ 4.000)
+    10000,                                   -- Faixa Salarial (3: R$ 3.001 - R$ 4.000)
     1,                                   -- Cargo (1: Desenvolvedor)
     'Maria Souza',                       -- Gerente (Nome do gerente)
     '5 anos',                            -- Tempo de Trabalho
     3,                                   -- Quantidade de Empresas Trabalhou
     8,                                   -- Quantidade de Anos Trabalhados Anteriormente
     2,                                   -- Nível de Escolaridade (2: Ensino Superior Completo)
-    0                                   -- Ex-funcionario
+    0,                                   -- Ex-funcionario
+    1,
+    1,
+    1,
+    1,
+    1,
+    13.5
 );
 
 -- Inserindo predição para o colaborador recém-criado
@@ -97,14 +109,20 @@ INSERT INTO colaborador (
     cep, 
     departamento_id, 
     setor_id, 
-    faixa_salarial_id, 
+    salario, 
     cargo_id, 
     gerente, 
     tempo_trabalho, 
     quantidade_empresas_trabalhou, 
     quantidade_anos_trabalhados_anteriormente, 
     nivel_escolaridade_id, 
-    ex_funcionario
+    ex_funcionario,
+    viagem_trabalho_id,
+    distancia_casa,
+    quantidade_anos_atual_gestor,
+    quantidade_anos_na_empresa,
+    quantidade_horas_treinamento_ano,
+    porcentagem_ultimo_aumento
 ) VALUES (
     'Arthur',                        -- Nome
     '1',                    -- CPF
@@ -125,14 +143,20 @@ INSERT INTO colaborador (
     '01000-000',                         -- CEP
     1,                                   -- Departamento (1: TI)
     1,                                   -- Setor (1: Desenvolvimento)
-    3,                                   -- Faixa Salarial (3: R$ 3.001 - R$ 4.000)
+    5000,                                   -- Faixa Salarial (3: R$ 3.001 - R$ 4.000)
     1,                                   -- Cargo (1: Desenvolvedor)
     'Maria Souza',                       -- Gerente (Nome do gerente)
     '5 anos',                            -- Tempo de Trabalho
     3,                                   -- Quantidade de Empresas Trabalhou
     8,                                   -- Quantidade de Anos Trabalhados Anteriormente
     2,                                   -- Nível de Escolaridade (2: Ensino Superior Completo)
-    0                                   -- Ex-funcionario
+    0,                                   -- Ex-funcionario
+    1,
+    1,
+    1,
+    1,
+    1,
+    13.5
 );
 
 -- Inserindo predição para o colaborador recém-criado
@@ -173,14 +197,20 @@ INSERT INTO colaborador (
     cep, 
     departamento_id, 
     setor_id, 
-    faixa_salarial_id, 
+    salario, 
     cargo_id, 
     gerente, 
     tempo_trabalho, 
     quantidade_empresas_trabalhou, 
     quantidade_anos_trabalhados_anteriormente, 
     nivel_escolaridade_id, 
-    ex_funcionario
+    ex_funcionario,
+    viagem_trabalho_id,
+    distancia_casa,
+    quantidade_anos_atual_gestor,
+    quantidade_anos_na_empresa,
+    quantidade_horas_treinamento_ano,
+    porcentagem_ultimo_aumento
 ) VALUES (
     'Arthur',                        -- Nome
     '2',                    -- CPF
@@ -201,14 +231,20 @@ INSERT INTO colaborador (
     '01000-000',                         -- CEP
     1,                                   -- Departamento (1: TI)
     1,                                   -- Setor (1: Desenvolvimento)
-    3,                                   -- Faixa Salarial (3: R$ 3.001 - R$ 4.000)
+    3000,                                   -- Faixa Salarial (3: R$ 3.001 - R$ 4.000)
     1,                                   -- Cargo (1: Desenvolvedor)
     'Maria Souza',                       -- Gerente (Nome do gerente)
     '5 anos',                            -- Tempo de Trabalho
     3,                                   -- Quantidade de Empresas Trabalhou
     8,                                   -- Quantidade de Anos Trabalhados Anteriormente
     2,                                   -- Nível de Escolaridade (2: Ensino Superior Completo)
-    0                                   -- Ex-funcionario
+    0,                                   -- Ex-funcionario
+    1,
+    1,
+    1,
+    1,
+    1,
+    13.5
 );
 
 -- Inserindo predição para o colaborador recém-criado
@@ -226,10 +262,10 @@ INSERT INTO colaborador_predicao (
     'Observação adicional sobre o colaborador.'              -- Observação
 );
 
-<<<<<<< HEAD
 INSERT INTO colaborador_perfil (colaborador_id, perfil_id) VALUES (3, 2);  -- Perfil de colaborador
 
 
+<<<<<<< HEAD
 LOAD DATA INFILE 'CasaInteligente-Back\base_traduzida_5.csv'
 INTO TABLE colaborador
 FIELDS TERMINATED BY ',' 
@@ -237,4 +273,3 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES
 (idade, genero_id, estado_civil_id, formacao_id, departamento_id, faixa_salarial_id, cargo_id, tempo_trabalho, quantidade_empresas_trabalhou, quantidade_anos_trabalhados_anteriormente, nivel_escolaridade, aumento_percentual_do_salario, distancia_de_casa, anos_com_o_atual_gestor, anos_na_empresa, cpf);
-

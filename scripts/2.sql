@@ -30,10 +30,10 @@ CREATE TABLE setor (
     nome VARCHAR(100) DEFAULT ''
 ) ENGINE=InnoDB;
 
--- CREATE TABLE faixa_salarial (
---     id INT AUTO_INCREMENT PRIMARY KEY,
---     descricao VARCHAR(50) DEFAULT ''
--- ) ENGINE=InnoDB;
+CREATE TABLE viagem_trabalho (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    descricao VARCHAR(100) DEFAULT ''
+) ENGINE=InnoDB;
 
 CREATE TABLE nivel_escolaridade (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,41 +71,31 @@ CREATE TABLE colaborador (
     cep VARCHAR(20) DEFAULT '',
     departamento_id INT DEFAULT NULL,
     setor_id INT DEFAULT NULL,
-    -- faixa_salarial_id INT DEFAULT NULL,
     salario DECIMAL(15,2) DEFAULT 0,
     cargo_id INT DEFAULT NULL,
     gerente VARCHAR(100) DEFAULT '',
-    tempo_trabalho VARCHAR(50) DEFAULT '',
+    tempo_trabalho INT DEFAULT 0,
     quantidade_empresas_trabalhou INT DEFAULT 0,                   
     quantidade_anos_trabalhados_anteriormente INT DEFAULT 0,       
     nivel_escolaridade_id INT DEFAULT NULL,
-    ex_funcionario TINYINT(1) DEFAULT 0,                                
-    aumento_percentual_do_salario INT DEFAULT NULL, 
-    distancia_de_casa INT DEFAULT NULL, 
-    anos_com_o_atual_gestor INT DEFAULT NULL, 
-    anos_na_empresa INT DEFAULT NULL,
-    satisfacao_trabalho INT DEFAULT NULL,
-    viagem_de_negocios VARCHAR(25) DEFAULT 'Non-Travel', 
-    satisfacao_com_o_ambiente INT DEFAULT NULL,
-    envolvimento_no_trabalho INT DEFAULT NULL,
-    nivel_do_trabalho INT DEFAULT NULL,
-    satisfacao_com_relacionamento INT DEFAULT NULL,
-    horas_de_treinamento_no_ultimo_ano INT DEFAULT NULL,
-    equilibrio_trabalho_vida INT DEFAULT NULL,
+    ex_funcionario TINYINT(1) DEFAULT 0,  
+    viagem_trabalho_id INT DEFAULT NULL,     
+    
+    porcentagem_ultimo_aumento INT DEFAULT NULL,
+    distancia_casa INT DEFAULT NULL, 
+    quantidade_anos_atual_gestor INT DEFAULT NULL, 
+    quantidade_anos_na_empresa INT DEFAULT NULL,
+    quantidade_horas_treinamento_ano INT DEFAULT NULL,
+
     FOREIGN KEY (genero_id) REFERENCES genero(id),
     FOREIGN KEY (estado_civil_id) REFERENCES estado_civil(id),
     FOREIGN KEY (formacao_id) REFERENCES formacao(id),
     FOREIGN KEY (faculdade_id) REFERENCES faculdade(id),
     FOREIGN KEY (departamento_id) REFERENCES departamento(id),
     FOREIGN KEY (setor_id) REFERENCES setor(id),
-    FOREIGN KEY (satisfacao_com_o_ambiente) REFERENCES resposta_opcao(id),
-    FOREIGN KEY (envolvimento_no_trabalho) REFERENCES resposta_opcao(id),
-    FOREIGN KEY (satisfacao_no_trabalho) REFERENCES resposta_opcao(id),
-    FOREIGN KEY (satisfacao_com_relacionamento) REFERENCES resposta_opcao(id),
-    FOREIGN KEY (equilibrio_trabalho_vida) REFERENCES resposta_opcao(id),
-    -- FOREIGN KEY (faixa_salarial_id) REFERENCES faixa_salarial(id),
     FOREIGN KEY (cargo_id) REFERENCES cargo(id),
-    FOREIGN KEY (nivel_escolaridade_id) REFERENCES nivel_escolaridade(id)
+    FOREIGN KEY (nivel_escolaridade_id) REFERENCES nivel_escolaridade(id),
+    FOREIGN KEY (viagem_trabalho_id) REFERENCES viagem_trabalho(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE colaborador_perfil (
@@ -119,8 +109,8 @@ CREATE TABLE colaborador_perfil (
 CREATE TABLE colaborador_predicao (
     id INT AUTO_INCREMENT PRIMARY KEY,
     colaborador_id INT,
-    evasao TEXT DEFAULT '',                                        -- Valor padrão 0
-    motivo TEXT DEFAULT '',                                        -- Valor padrão é string vazia
+    evasao TEXT DEFAULT '',                                        
+    motivo TEXT DEFAULT '',                                        
     sugestao TEXT DEFAULT '',
     observacao TEXT DEFAULT '',
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE

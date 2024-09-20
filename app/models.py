@@ -69,16 +69,15 @@ class Setor(db.Model):
             'nome': self.nome
         }
 
-# # Faixa Salarial Table
-# class FaixaSalarial(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     descricao = db.Column(db.String(50), default='')
+class ViagemTrabalho(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    descricao = db.Column(db.String(50), default='')
 
-#     def to_dict(self):
-#         return {
-#             'id': self.id,
-#             'descricao': self.descricao
-#         }
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'descricao': self.descricao
+        }
 
 # Nivel Escolaridade Table
 class NivelEscolaridade(db.Model):
@@ -124,14 +123,21 @@ class Colaborador(db.Model):
     cep = db.Column(db.String(20), default='')
     departamento_id = db.Column(db.Integer, db.ForeignKey('departamento.id'), nullable=True)
     setor_id = db.Column(db.Integer, db.ForeignKey('setor.id'), nullable=True)
-    # faixa_salarial_id = db.Column(db.Integer, db.ForeignKey('faixa_salarial.id'), nullable=True)
+    viagem_trabalho_id = db.Column(db.Integer, db.ForeignKey('viagem_trabalho.id'), nullable=True)
     salario = db.Column(db.DECIMAL, default=0)
     cargo_id = db.Column(db.Integer, db.ForeignKey('cargo.id'), nullable=True)
     gerente = db.Column(db.String(100), default='')
-    tempo_trabalho = db.Column(db.String(50), default='')
+    tempo_trabalho = db.Column(db.Integer, default=0)
     quantidade_empresas_trabalhou = db.Column(db.Integer, default=0)
     quantidade_anos_trabalhados_anteriormente = db.Column(db.Integer, default=0)
     nivel_escolaridade_id = db.Column(db.Integer, db.ForeignKey('nivel_escolaridade.id'), nullable=True)
+
+    porcentagem_ultimo_aumento = db.Column(db.Integer, default=0)
+    distancia_casa = db.Column(db.Integer, default=0) 
+    quantidade_anos_atual_gestor = db.Column(db.Integer, default=0)
+    quantidade_anos_na_empresa = db.Column(db.Integer, default=0)
+    quantidade_horas_treinamento_ano = db.Column(db.Integer, default=0)
+
     ex_funcionario = db.Column(db.Boolean, default=False)
 
     genero = db.relationship('Genero', backref='colaboradores')
@@ -140,7 +146,7 @@ class Colaborador(db.Model):
     faculdade = db.relationship('Faculdade', backref='colaboradores')
     departamento = db.relationship('Departamento', backref='colaboradores')
     setor = db.relationship('Setor', backref='colaboradores')
-    # faixa_salarial = db.relationship('FaixaSalarial', backref='colaboradores')
+    viagem_trabalho = db.relationship('ViagemTrabalho', backref='colaboradores')
     cargo = db.relationship('Cargo', backref='colaboradores')
     nivel_escolaridade = db.relationship('NivelEscolaridade', backref='colaboradores')
     respostas_anonima = db.relationship("RespostaAnonima", back_populates="colaborador", cascade="all, delete-orphan")
@@ -168,7 +174,7 @@ class Colaborador(db.Model):
             'faculdade': {'id': self.faculdade.id, 'nome': self.faculdade.nome},
             'departamento': {'id': self.departamento.id, 'nome': self.departamento.nome},
             'setor': {'id': self.setor.id, 'nome': self.setor.nome},
-            # 'faixaSalarial': {'id': self.faixa_salarial.id, 'descricao': self.faixa_salarial.descricao},
+            'viagemTrabalho': {'id': self.viagem_trabalho.id, 'descricao': self.viagem_trabalho.descricao},
             'salario': self.salario,
             'cargo': {'id': self.cargo.id, 'nome': self.cargo.nome},
             'gerente': self.gerente,
@@ -176,6 +182,11 @@ class Colaborador(db.Model):
             'quantidadeEmpresasTrabalhou': self.quantidade_empresas_trabalhou,
             'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
             'nivelEscolaridade': {'id': self.nivel_escolaridade.id, 'descricao': self.nivel_escolaridade.descricao},
+            'distanciaCasa': self.distancia_casa,
+            'quantidadeAnosAtualGestor': self.quantidade_anos_atual_gestor,
+            'quantidadeAnosNaEmpresa': self.quantidade_anos_na_empresa,
+            'quantidadeHorasTreinamentoAno': self.quantidade_horas_treinamento_ano,
+            'porcentagemUltimoAumento': self.porcentagem_ultimo_aumento,
             'exFuncionario': self.ex_funcionario,
             'perfis': [perfil.to_dict() for perfil in self.perfis],
             'respostas_anonima': [resposta.to_dict() for resposta in self.respostas_anonima],
@@ -195,7 +206,7 @@ class Colaborador(db.Model):
             'cep': self.cep,
             'departamento': {'nome': self.departamento.nome},
             'setor': {'nome': self.setor.nome},
-            # 'faixaSalarial': { 'descricao': self.faixa_salarial.descricao},
+            'viagemTrabalho': { 'descricao': self.viagem_trabalho.descricao},
             'salario': self.salario,
             'cargo': {'nome': self.cargo.nome},
             'gerente': self.gerente,
@@ -203,7 +214,12 @@ class Colaborador(db.Model):
             'quantidadeEmpresasTrabalhou': self.quantidade_empresas_trabalhou,
             'quantidadeAnosTrabalhadosAnteriormente': self.quantidade_anos_trabalhados_anteriormente,
             'nivelEscolaridade': {'descricao': self.nivel_escolaridade.descricao},
-            'exFuncionario': self.ex_funcionario
+            'exFuncionario': self.ex_funcionario,
+            'distanciaCasa': self.distancia_casa,
+            'quantidadeAnosAtualGestor': self.quantidade_anos_atual_gestor,
+            'quantidadeAnosNaEmpresa': self.quantidade_anos_na_empresa,
+            'quantidadeHorasTreinamentoAno': self.quantidade_horas_treinamento_ano,
+            'porcentagemUltimoAumento': self.porcentagem_ultimo_aumento
         }
 
 # Perfil Table

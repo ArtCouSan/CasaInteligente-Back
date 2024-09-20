@@ -33,6 +33,12 @@ INSERT INTO faculdade (nome) VALUES
 ('PUC-SP'),
 ('FGV');
 
+INSERT INTO viagem_trabalho (descricao) VALUES 
+('Não Respondido'),
+('Não Viaja'),
+('Viaja Raramente'),
+('Viaja Frequentemente');
+
 INSERT INTO formacao (descricao) VALUES 
 ('Não Respondido'),
 ('Ciência da Computação'),
