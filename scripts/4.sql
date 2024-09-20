@@ -26,7 +26,13 @@ INSERT INTO colaborador (
     quantidade_empresas_trabalhou, 
     quantidade_anos_trabalhados_anteriormente, 
     nivel_escolaridade_id, 
-    ex_funcionario
+    ex_funcionario,
+    viagem_trabalho_id,
+    distancia_casa,
+    quantidade_anos_atual_gestor,
+    quantidade_anos_na_empresa,
+    quantidade_horas_treinamento_ano,
+    porcentagem_ultimo_aumento
 ) VALUES (
     'Arthur',                        -- Nome
     '0',                    -- CPF
@@ -54,7 +60,13 @@ INSERT INTO colaborador (
     3,                                   -- Quantidade de Empresas Trabalhou
     8,                                   -- Quantidade de Anos Trabalhados Anteriormente
     2,                                   -- Nível de Escolaridade (2: Ensino Superior Completo)
-    0                                   -- Ex-funcionario
+    0,                                   -- Ex-funcionario
+    1,
+    1,
+    1,
+    1,
+    1,
+    13.5
 );
 
 -- Inserindo predição para o colaborador recém-criado
@@ -104,7 +116,13 @@ INSERT INTO colaborador (
     quantidade_empresas_trabalhou, 
     quantidade_anos_trabalhados_anteriormente, 
     nivel_escolaridade_id, 
-    ex_funcionario
+    ex_funcionario,
+    viagem_trabalho_id,
+    distancia_casa,
+    quantidade_anos_atual_gestor,
+    quantidade_anos_na_empresa,
+    quantidade_horas_treinamento_ano,
+    porcentagem_ultimo_aumento
 ) VALUES (
     'Arthur',                        -- Nome
     '1',                    -- CPF
@@ -132,7 +150,13 @@ INSERT INTO colaborador (
     3,                                   -- Quantidade de Empresas Trabalhou
     8,                                   -- Quantidade de Anos Trabalhados Anteriormente
     2,                                   -- Nível de Escolaridade (2: Ensino Superior Completo)
-    0                                   -- Ex-funcionario
+    0,                                   -- Ex-funcionario
+    1,
+    1,
+    1,
+    1,
+    1,
+    13.5
 );
 
 -- Inserindo predição para o colaborador recém-criado
@@ -180,7 +204,13 @@ INSERT INTO colaborador (
     quantidade_empresas_trabalhou, 
     quantidade_anos_trabalhados_anteriormente, 
     nivel_escolaridade_id, 
-    ex_funcionario
+    ex_funcionario,
+    viagem_trabalho_id,
+    distancia_casa,
+    quantidade_anos_atual_gestor,
+    quantidade_anos_na_empresa,
+    quantidade_horas_treinamento_ano,
+    porcentagem_ultimo_aumento
 ) VALUES (
     'Arthur',                        -- Nome
     '2',                    -- CPF
@@ -208,7 +238,13 @@ INSERT INTO colaborador (
     3,                                   -- Quantidade de Empresas Trabalhou
     8,                                   -- Quantidade de Anos Trabalhados Anteriormente
     2,                                   -- Nível de Escolaridade (2: Ensino Superior Completo)
-    0                                   -- Ex-funcionario
+    0,                                   -- Ex-funcionario
+    1,
+    1,
+    1,
+    1,
+    1,
+    13.5
 );
 
 -- Inserindo predição para o colaborador recém-criado
@@ -229,7 +265,7 @@ INSERT INTO colaborador_predicao (
 INSERT INTO colaborador_perfil (colaborador_id, perfil_id) VALUES (3, 2);  -- Perfil de colaborador
 
 
--- LOAD DATA INFILE 'CasaInteligente-Back\base_traduzida_3.csv'
+-- LOAD DATA INFILE 'CasaInteligente-Back\base_traduzida_4.csv'
 -- INTO TABLE colaborador
 -- FIELDS TERMINATED BY ',' 
 -- ENCLOSED BY '"'

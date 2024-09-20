@@ -43,7 +43,7 @@ def create_colaborador():
         cep=data.get('cep', ''),
         departamento_id=data.get('departamento', {}).get('id', 1),
         setor_id=data.get('setor', {}).get('id', 1),
-        # faixa_salarial_id=data.get('faixaSalarial', {}).get('id', 1),
+        viagem_trabalho_id=data.get('viagemTrabalho', {}).get('id', 1),
         salario=data.get('salario', 0),
         cargo_id=data.get('cargo', {}).get('id', 1),
         gerente=data.get('gerente', ''),
@@ -52,6 +52,11 @@ def create_colaborador():
         quantidade_anos_trabalhados_anteriormente=data.get('quantidadeAnosTrabalhadosAnteriormente', 0),
         nivel_escolaridade_id=data.get('nivelEscolaridade', {}).get('id', 1),
         ex_funcionario=data.get('exFuncionario', False),
+        distancia_casa=data.get('distanciaCasa', 0),
+        quantidade_anos_atual_gestor=data.get('quantidadeAnosAtualGestor', 0),
+        quantidade_anos_na_empresa=data.get('quantidadeAnosNaEmpresa', 0),
+        quantidade_horas_treinamento_ano=data.get('quantidadeHorasTreinamentoAno', 0),
+        porcentagem_ultimo_aumento=data.get('porcentagemUltimoAumento', 0),
         senha_hash=123
     )
     
@@ -82,7 +87,7 @@ def update_colaborador(id):
     colaborador.cep = data.get('cep', colaborador.cep)
     colaborador.departamento_id = data.get('departamento', {}).get('id', colaborador.departamento_id or 1)
     colaborador.setor_id = data.get('setor', {}).get('id', colaborador.setor_id or 1)
-    # colaborador.faixa_salarial_id = data.get('faixaSalarial', {}).get('id', colaborador.faixa_salarial_id or 1)
+    colaborador.viagem_trabalho_id = data.get('viagemTrabalho', {}).get('id', colaborador.viagem_trabalho_id or 1)
     colaborador.salario = data.get('salario', colaborador.salario)
     colaborador.cargo_id = data.get('cargo', {}).get('id', colaborador.cargo_id or 1)
     colaborador.gerente = data.get('gerente', colaborador.gerente)
@@ -91,6 +96,11 @@ def update_colaborador(id):
     colaborador.quantidade_anos_trabalhados_anteriormente = data.get('quantidadeAnosTrabalhadosAnteriormente', colaborador.quantidade_anos_trabalhados_anteriormente)
     colaborador.nivel_escolaridade_id = data.get('nivelEscolaridade', {}).get('id', colaborador.nivel_escolaridade_id or 1)
     colaborador.ex_funcionario = data.get('exFuncionario', colaborador.ex_funcionario)
+    colaborador.distancia_casa = data.get('distanciaCasa', 0)
+    colaborador.quantidade_anos_atual_gestor = data.get('quantidadeAnosAtualGestor', 0)
+    colaborador.quantidade_anos_na_empresa = data.get('quantidadeAnosNaEmpresa', 0)
+    colaborador.quantidade_horas_treinamento_ano =data.get('quantidadeHorasTreinamentoAno', 0)
+    colaborador.porcentagem_ultimo_aumento =data.get('porcentagemUltimoAumento', 0)
 
     db.session.commit()
     return jsonify(colaborador.to_dict())
@@ -180,6 +190,11 @@ def listar_departamentos():
     departamentos = Departamento.query.all()
     return jsonify([departamento.to_dict() for departamento in departamentos])
 
+@bp.route('/viagem-trabalho', methods=['GET'])
+def listar_viagens():
+    tipos = ViagemTrabalho.query.all()
+    return jsonify([tipo.to_dict() for tipo in tipos])
+
 @bp.route('/setores', methods=['GET'])
 def listar_setores():
     setores = Setor.query.all()
@@ -189,11 +204,6 @@ def listar_setores():
 def listar_cargos():
     cargos = Cargo.query.all()
     return jsonify([cargo.to_dict() for cargo in cargos])
-
-# @bp.route('/faixas-salariais', methods=['GET'])
-# def listar_faixas_salariais():
-#     faixas_salariais = FaixaSalarial.query.all()
-#     return jsonify([faixa_salarial.to_dict() for faixa_salarial in faixas_salariais])
 
 # Rota para listar todas as perguntas
 @bp.route('/pergunta', methods=['GET'])
