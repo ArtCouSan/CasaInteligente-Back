@@ -66,37 +66,6 @@ INSERT INTO setor (nome) VALUES
 ('Contabilidade'),
 ('Recrutamento');
 
--- INSERT INTO faixa_salarial (descricao) VALUES 
--- ('R$ 0 - R$ 0'),
--- ('R$ 1.000 - R$ 1.500'),
--- ('R$ 1.501 - R$ 2.000'),
--- ('R$ 2.001 - R$ 2.500'),
--- ('R$ 2.501 - R$ 3.000'),
--- ('R$ 3.001 - R$ 3.500'),
--- ('R$ 3.501 - R$ 4.000'),
--- ('R$ 4.001 - R$ 4.500'),
--- ('R$ 4.501 - R$ 5.000'),
--- ('R$ 5.001 - R$ 5.500'),
--- ('R$ 5.501 - R$ 6.000'),
--- ('R$ 6.001 - R$ 6.500'),
--- ('R$ 6.501 - R$ 7.000'),
--- ('R$ 7.001 - R$ 7.500'),
--- ('R$ 7.501 - R$ 8.000'),
--- ('R$ 8.001 - R$ 8.500'),
--- ('R$ 8.501 - R$ 9.000'),
--- ('R$ 9.001 - R$ 9.500'),
--- ('R$ 9.501 - R$ 10.000'),
--- ('R$ 10.001 - R$ 10.500'),
--- ('R$ 10.501 - R$ 11.000'),
--- ('R$ 11.001 - R$ 11.500'),
--- ('R$ 11.501 - R$ 12.000'),
--- ('R$ 12.001 - R$ 12.500'),
--- ('R$ 12.501 - R$ 13.000'),
--- ('R$ 13.001 - R$ 13.500'),
--- ('R$ 13.501 - R$ 14.000'),
--- ('R$ 14.001 - R$ 14.500'),
--- ('R$ 14.501 - R$ 15.000');
-
 INSERT INTO cargo (nome) VALUES 
 ('Não Respondido'),
 ('Desenvolvedor'),
@@ -111,90 +80,69 @@ INSERT INTO cargo (nome) VALUES
 ('Diretor de Pesquisa'),
 ('Recursos Humanos');
 
-INSERT INTO pergunta (texto) VALUES 
-('Qual é o seu nível de satisfação com o seu ambiente de trabalho?'),
-('Como você descreveria seu nível de envolvimento com suas tarefas e responsabilidades no trabalho?'),
-('Quão satisfeito você está com seu trabalho atual?'),
-('Como você avalia sua satisfação com os relacionamentos profissionais que você tem na empresa (com colegas, supervisores, etc.)?'),
-('Quão satisfeito você está com o equilíbrio entre sua vida profissional e pessoal?');
+-- Inserir a pesquisa
+INSERT INTO pesquisa (titulo, descricao, ano)
+VALUES ('Pesquisa de Satisfação no Trabalho', 'Avaliação de diferentes aspectos do trabalho', 2024);
+
+-- Obter o ID da pesquisa criada
+SET @pesquisa_id = LAST_INSERT_ID();
+
+-- 1. Pergunta: Satisfação no Trabalho
+INSERT INTO pergunta (texto) VALUES ('Qual é o seu nível de satisfação no trabalho?');
+SET @pergunta_satisfacao_trabalho = LAST_INSERT_ID();
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
+VALUES (@pesquisa_id, @pergunta_satisfacao_trabalho);
+INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
+(@pergunta_satisfacao_trabalho, 'Baixa', 1),
+(@pergunta_satisfacao_trabalho, 'Média', 2),
+(@pergunta_satisfacao_trabalho, 'Alta', 3),
+(@pergunta_satisfacao_trabalho, 'Muito Alta', 4);
+
+-- 2. Pergunta: Satisfação com o Ambiente
+INSERT INTO pergunta (texto) VALUES ('Como você avalia a sua satisfação com o ambiente de trabalho?');
+SET @pergunta_satisfacao_ambiente = LAST_INSERT_ID();
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
+VALUES (@pesquisa_id, @pergunta_satisfacao_ambiente);
+INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
+(@pergunta_satisfacao_ambiente, 'Baixa', 1),
+(@pergunta_satisfacao_ambiente, 'Média', 2),
+(@pergunta_satisfacao_ambiente, 'Alta', 3),
+(@pergunta_satisfacao_ambiente, 'Muito Alta', 4);
+
+-- 3. Pergunta: Envolvimento no Trabalho
+INSERT INTO pergunta (texto) VALUES ('Qual é o seu nível de envolvimento com o trabalho?');
+SET @pergunta_envolvimento_trabalho = LAST_INSERT_ID();
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
+VALUES (@pesquisa_id, @pergunta_envolvimento_trabalho);
+INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
+(@pergunta_envolvimento_trabalho, 'Baixo', 1),
+(@pergunta_envolvimento_trabalho, 'Médio', 2),
+(@pergunta_envolvimento_trabalho, 'Alto', 3),
+(@pergunta_envolvimento_trabalho, 'Muito Alto', 4);
+
+-- 4. Pergunta: Satisfação com o Relacionamento
+INSERT INTO pergunta (texto) VALUES ('Como você avalia a sua satisfação com o relacionamento com colegas e gestores?');
+SET @pergunta_satisfacao_relacionamento = LAST_INSERT_ID();
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
+VALUES (@pesquisa_id, @pergunta_satisfacao_relacionamento);
+INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
+(@pergunta_satisfacao_relacionamento, 'Baixa', 1),
+(@pergunta_satisfacao_relacionamento, 'Média', 2),
+(@pergunta_satisfacao_relacionamento, 'Alta', 3),
+(@pergunta_satisfacao_relacionamento, 'Muito Alta', 4);
+
+-- 5. Pergunta: Equilíbrio Trabalho-Vida
+INSERT INTO pergunta (texto) VALUES ('Como você avalia o equilíbrio entre trabalho e vida pessoal?');
+SET @pergunta_equilibrio_trabalho_vida = LAST_INSERT_ID();
+INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
+VALUES (@pesquisa_id, @pergunta_equilibrio_trabalho_vida);
+INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
+(@pergunta_equilibrio_trabalho_vida, 'Ruim', 1),
+(@pergunta_equilibrio_trabalho_vida, 'Bom', 2),
+(@pergunta_equilibrio_trabalho_vida, 'Melhor', 3),
+(@pergunta_equilibrio_trabalho_vida, 'Ótimo', 4);
 
 INSERT INTO perfil(nome) VALUES
 ('colaborador'),
 ('dp'),
 ('desenvolvedor');
-
--- Pergunta 1: Nível de satisfação com o ambiente de trabalho
-INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Muito satisfeito', 5, 1),
-('Satisfeito', 4, 1),
-('Neutro', 3, 1),
-('Insatisfeito', 2, 1),
-('Muito insatisfeito', 1, 1);
-
--- Pergunta 2: Nível de envolvimento com tarefas e responsabilidades
-INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Totalmente envolvido', 5, 2),
-('Bem envolvido', 4, 2),
-('Neutro', 3, 2),
-('Pouco envolvido', 2, 2),
-('Nada envolvido', 1, 2);
-
--- Pergunta 3: Satisfação com o trabalho atual
-INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Muito satisfeito', 5, 3),
-('Satisfeito', 4, 3),
-('Neutro', 3, 3),
-('Insatisfeito', 2, 3),
-('Muito insatisfeito', 1, 3);
-
--- Pergunta 4: Satisfação com os relacionamentos profissionais na empresa
-INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Muito satisfeito', 5, 4),
-('Satisfeito', 4, 4),
-('Neutro', 3, 4),
-('Insatisfeito', 2, 4),
-('Muito insatisfeito', 1, 4);
-
--- Pergunta 5: Satisfação com o equilíbrio entre vida profissional e pessoal
-INSERT INTO resposta_opcao (texto, nota, pergunta_id) VALUES 
-('Muito equilibrado', 5, 5),
-('Equilibrado', 4, 5),
-('Neutro', 3, 5),
-('Desequilibrado', 2, 5),
-('Muito desequilibrado', 1, 5);
-
-INSERT INTO pesquisa (titulo, descricao, ano, is_pesquisa_fechada, is_pesquisa_anonima)
-VALUES 
-('Pulso 1', 'Pesquisa trimestral sobre a satisfação dos colaboradores no ambiente de trabalho', 2023, 0, 1);
-
-INSERT INTO pesquisa (titulo, descricao, ano, is_pesquisa_fechada, is_pesquisa_anonima)
-VALUES 
-('Pulso 2', 'Avaliação do clima organizacional no primeiro semestre', 2023, 1, 0);
-
-INSERT INTO pesquisa (titulo, descricao, ano, is_pesquisa_fechada, is_pesquisa_anonima)
-VALUES 
-('Pulso 3', 'Pesquisa para avaliar o engajamento dos colaboradores com as metas da empresa', 2023, 0, 0);
-
-INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id)
-VALUES
-(1, 1),  
-(1, 2), 
-(1, 3), 
-(1, 4), 
-(1, 5); 
-
-INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id)
-VALUES
-(2, 1),  
-(2, 2), 
-(2, 3), 
-(2, 4), 
-(2, 5); 
-
-INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id)
-VALUES
-(3, 1),  
-(3, 2), 
-(3, 3), 
-(3, 4), 
-(3, 5); 

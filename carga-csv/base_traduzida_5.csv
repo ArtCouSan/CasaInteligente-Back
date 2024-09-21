@@ -1,4 +1,4 @@
-idade;evasao;genero_id;estado_civil_id;formacao_id;departamento_id;salario;cargo_id;tempo_trabalho;quantidade_empresas_trabalhou;quantidade_anos_trabalhados_anteriormente;nivel_escolaridade_id;aumento_percentual_do_salario;distancia_de_casa;anos_com_o_atual_gestor;anos_na_empresa;cpf;satisfacao_trabalho;viagem_de_negocios;satisfacao_com_o_ambiente;envolvimento_no_trabalho;nivel_do_trabalho;satisfacao_com_relacionamento;horas_de_treinamento_no_ultimo_ano;equilibrio_trabalho_vida
+idade;evasao;genero_id;estado_civil_id;formacao_id;departamento_id;salario;cargo_id;tempo_trabalho;quantidade_empresas_trabalhou;quantidade_anos_trabalhados_anteriormente;nivel_escolaridade_id;porcentagem_ultimo_aumento;distancia_casa;quantidade_anos_atual_gestor;quantidade_anos_na_empresa;cpf;satisfacao_trabalho;viagem_trabalho_id;satisfacao_com_o_ambiente;envolvimento_no_trabalho;nivel_do_trabalho;satisfacao_com_relacionamento;quantidade_horas_treinamento_ano;equilibrio_trabalho_vida
 41;Sim;2;2;5;6;5993;5;4;8;8;6;11;1;5;6;77627114367;4;3;2;3;2;1;0;1
 49;Não;3;3;5;5;5130;6;7;1;10;4;23;8;7;10;10985367177;2;4;3;2;2;4;3;3
 37;Sim;3;2;9;5;2090;7;0;6;7;6;15;2;0;0;38458610573;3;3;4;2;1;2;3;3

@@ -263,13 +263,3 @@ INSERT INTO colaborador_predicao (
 );
 
 INSERT INTO colaborador_perfil (colaborador_id, perfil_id) VALUES (3, 2);  -- Perfil de colaborador
-
-
-<<<<<<< HEAD
-LOAD DATA INFILE 'CasaInteligente-Back\base_traduzida_5.csv'
-INTO TABLE colaborador
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
-IGNORE 1 LINES
-(idade, genero_id, estado_civil_id, formacao_id, departamento_id, faixa_salarial_id, cargo_id, tempo_trabalho, quantidade_empresas_trabalhou, quantidade_anos_trabalhados_anteriormente, nivel_escolaridade, aumento_percentual_do_salario, distancia_de_casa, anos_com_o_atual_gestor, anos_na_empresa, cpf);

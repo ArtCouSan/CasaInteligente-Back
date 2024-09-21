@@ -16,3 +16,4 @@ sentence-transformers
 flask_sqlalchemy
 flask_pymongo
 mysql-connector-python
+faker
