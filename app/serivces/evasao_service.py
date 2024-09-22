@@ -53,20 +53,6 @@ coluna_para_nome_amigavel = {
     'viagem_trabalho_id': 'Viagem a trabalho'
 }
 
-# Dicionário de mapeamento para valores codificados
-valores_codificados_para_nome = {
-    'departamento_id_5': 'Departamento de TI',
-    'departamento_id_6': 'Departamento Financeiro',
-    'formacao_id_6': 'Formação em Engenharia',
-    'formacao_id_7': 'Formação em Administração',
-    'genero_id': {1: 'Feminino', 2: 'Masculino'},
-    'estado_civil_id': {1: 'Solteiro', 2: 'Casado', 3: 'Divorciado'},
-    'cargo_id_5': 'Analista',
-    'cargo_id_6': 'Gerente',
-    'viagem_trabalho_id_3': 'Viagem Frequente',
-    'viagem_trabalho_id_4': 'Viagem Ocasional'
-}
-
 def calcular_contribuicao(features, coeficientes):
     """
     Calcula a contribuição de cada feature para a predição final.
@@ -81,39 +67,33 @@ def calcular_contribuicao(features, coeficientes):
     return contribuicao_df
 
 def salvar_feature_importances(contribuicao_df, colaborador_predicao_id):
-
     EvasaoFeatureImportance.query.filter_by(colaborador_predicao_id=colaborador_predicao_id).delete()
     db.session.commit()
 
-    contribuicao_df = contribuicao_df.sort_values(by='Contribuicao', key=abs, ascending=False)
-    top_five_contribuicoes = contribuicao_df.head(5)
+    contribuicao_df = contribuicao_df.sort_values(by='Contribuicao', key=abs, ascending=False)    
+    top_five_contribuicoes = contribuicao_df.head(10)
 
     for _, row in top_five_contribuicoes.iterrows():
         feature = row['Feature']
-        value = row['Value']
         contribuicao = row['Contribuicao']
         
+        # Obter o nome amigável da feature
         nome_amigavel = coluna_para_nome_amigavel.get(feature, feature)
         
-        if isinstance(value, (int, float)):
-            valor_descricao = f"{value:.2f}"
-        else:
-            valor_descricao = value
-        
+        # Construir o texto explicativo
         if contribuicao > 0:
-            fator_texto = f"A variável '{nome_amigavel}' com valor '{valor_descricao}', que está contribuindo para aumentar a chance de saída"
-        else:
-            fator_texto = f"A variável '{nome_amigavel}' com valor '{valor_descricao}', que está contribuindo para diminuir a chance de saída"
 
-        # Salvar cada linha de importância como uma nova instância de EvasaoFeatureImportance
-        nova_importancia = EvasaoFeatureImportance(
-            colaborador_predicao_id=colaborador_predicao_id,
-            motivo=fator_texto,
-            acuracia=abs(contribuicao)  # Aqui, 'acuracia' representa a magnitude da contribuição
-        )
-        
-        db.session.add(nova_importancia)
-        db.session.commit()
+            fator_texto = f"A variável '{nome_amigavel}' que está contribuindo para aumentar a chance de saída"
+
+            # Salvar cada linha de importância como uma nova instância de EvasaoFeatureImportance
+            nova_importancia = EvasaoFeatureImportance(
+                colaborador_predicao_id=colaborador_predicao_id,
+                motivo=fator_texto,
+                acuracia=abs(contribuicao)  # Aqui, 'acuracia' representa a magnitude da contribuição
+            )
+            
+            db.session.add(nova_importancia)    
+            db.session.commit()
 
 def verificar_evasao_colaborador(colaborador):
     data = colaborador  # Dicionário do colaborador
@@ -246,25 +226,3 @@ def obter_respostas_mais_recentes(colaborador_id):
     respostas_dict = {resposta.pergunta_id: resposta.nota for resposta in respostas_recentes}
     
     return respostas_dict
-
-def obter_mapeamento_dinamico():
-    mapeamento = {}
-
-    tabelas_mapeamento = {
-        'Genero': {'modelo': Genero, 'atributo': 'descricao'},
-        'EstadoCivil': {'modelo': EstadoCivil, 'atributo': 'descricao'},
-        'Formacao': {'modelo': Formacao, 'atributo': 'descricao'},
-        'Departamento': {'modelo': Departamento, 'atributo': 'nome'},  # Ajustado para 'nome'
-        'Cargo': {'modelo': Cargo, 'atributo': 'nome'},
-        'ViagemTrabalho': {'modelo': ViagemTrabalho, 'atributo': 'descricao'},
-        'NivelEscolaridade': {'modelo': NivelEscolaridade, 'atributo': 'descricao'}
-    }
-
-    for nome_tabela, info in tabelas_mapeamento.items():
-        modelo = info['modelo']
-        atributo = info['atributo']
-        dados_tabela = db.session.query(modelo).all()
-        mapeamento[nome_tabela] = {getattr(item, 'id'): getattr(item, atributo) for item in dados_tabela}
-
-    return mapeamento
-
