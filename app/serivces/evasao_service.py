@@ -80,99 +80,91 @@ def calcular_contribuicao(features, coeficientes):
     }).sort_values(by='Contribuicao', key=abs, ascending=False)
     return contribuicao_df
 
-def gerar_explicacao_leiga(contribuicao_df, probabilidade, predicao):
-    """
-    Gera uma explicação textual amigável com base nas contribuições das features para a predição.
+def salvar_feature_importances(contribuicao_df, colaborador_predicao_id):
 
-    Parâmetros:
-    contribuicao_df (DataFrame): DataFrame com as contribuições das features.
-    probabilidade (float): Probabilidade de evasão.
-    predicao (int): Predição final (0 ou 1).
+    EvasaoFeatureImportance.query.filter_by(colaborador_predicao_id=colaborador_predicao_id).delete()
+    db.session.commit()
 
-    Retorna:
-    explicacao (str): Texto explicativo amigável.
-    """
     contribuicao_df = contribuicao_df.sort_values(by='Contribuicao', key=abs, ascending=False)
-
-    if predicao == 1:
-        explicacao = f"Este colaborador tem uma alta probabilidade de deixar a empresa ({probabilidade:.2%}). "
-    else:
-        explicacao = f"Este colaborador tem uma baixa probabilidade de deixar a empresa ({probabilidade:.2%}). "
-    
-    explicacao += "Os cinco principais fatores que influenciam esta previsão são: "
-
-    # Selecionar as cinco principais contribuições
     top_five_contribuicoes = contribuicao_df.head(5)
 
-    # Construir a explicação em texto corrido
-    fatores = []
-    for index, row in top_five_contribuicoes.iterrows():
+    for _, row in top_five_contribuicoes.iterrows():
         feature = row['Feature']
         value = row['Value']
         contribuicao = row['Contribuicao']
         
-        # Nome amigável da feature
         nome_amigavel = coluna_para_nome_amigavel.get(feature, feature)
         
-        # Substituir valores codificados por descrições
         if isinstance(value, (int, float)):
             valor_descricao = f"{value:.2f}"
         else:
-            valor_descricao = valores_codificados_para_nome.get(feature, {}).get(value, value)
+            valor_descricao = value
         
         if contribuicao > 0:
-            fator_texto = f"a variável '{nome_amigavel}' com valor '{valor_descricao}', que está contribuindo para aumentar a chance de saída"
+            fator_texto = f"A variável '{nome_amigavel}' com valor '{valor_descricao}', que está contribuindo para aumentar a chance de saída"
         else:
-            fator_texto = f"a variável '{nome_amigavel}' com valor '{valor_descricao}', que está contribuindo para diminuir a chance de saída"
-        
-        fatores.append(fator_texto)
-    
-    # Juntar todos os fatores em uma frase corrida
-    explicacao += "; ".join(fatores) + "."
+            fator_texto = f"A variável '{nome_amigavel}' com valor '{valor_descricao}', que está contribuindo para diminuir a chance de saída"
 
-    return explicacao
+        # Salvar cada linha de importância como uma nova instância de EvasaoFeatureImportance
+        nova_importancia = EvasaoFeatureImportance(
+            colaborador_predicao_id=colaborador_predicao_id,
+            motivo=fator_texto,
+            acuracia=abs(contribuicao)  # Aqui, 'acuracia' representa a magnitude da contribuição
+        )
+        
+        db.session.add(nova_importancia)
+        db.session.commit()
 
 def verificar_evasao_colaborador(colaborador):
-    data = colaborador  # Colaborador já está sendo passado como dicionário
+    data = colaborador  # Dicionário do colaborador
 
     # Pré-processamento e previsão
     features = gerar_dados_colaborador(data)
-    probabilidade = modelo_carregado.predict_proba(features)[0, 1]  # Probabilidade de evasão
-    predicao = modelo_carregado.predict(features)[0]  # Previsão de evasão (0 ou 1)
+    probabilidade = modelo_carregado.predict_proba(features)[0, 1]
+    predicao = modelo_carregado.predict(features)[0]
 
-    # Verificando se o modelo dentro do pipeline possui coef_
     try:
         importancias = modelo_carregado.named_steps['classifier'].coef_[0]
     except AttributeError:
         raise AttributeError("Erro ao acessar os coeficientes do modelo. Certifique-se de que o modelo é uma regressão logística.")
 
-    # Calcular as contribuições das features
     contribuicao_df = calcular_contribuicao(features, importancias)
 
-    # Gerar explicação textual amigável
-    explicacao = gerar_explicacao_leiga(contribuicao_df, probabilidade, predicao)
-
+    # Verificar se a análise já existe
     analise_existente = AnaliseColaborador.query.filter_by(colaborador_id=colaborador.get('id')).first()
 
-    if analise_existente:
-        # Atualizar a análise existente
-        analise_existente.evasao = "Sim" if int(predicao) == 1 else "Não"
-        analise_existente.motivo = ""  # Pode adicionar a lógica para determinar o motivo
-        analise_existente.sugestao = ""  # Pode adicionar a lógica para determinar a sugestão
-        analise_existente.observacao = explicacao
-        analise_existente.porcentagem_evasao = float(probabilidade)*100
-        return analise_existente
+    explicacao = ""
+    if predicao == 1:
+        explicacao = f"Este colaborador tem uma alta probabilidade de deixar a empresa ({probabilidade:.2%}). "
     else:
-        # Criar uma nova análise
+        explicacao = f"Este colaborador tem uma baixa probabilidade de deixar a empresa ({probabilidade:.2%}). "
+    
+
+    if analise_existente:
+        analise_existente.evasao = "Sim" if int(predicao) == 1 else "Não"
+        analise_existente.motivo = ""  
+        analise_existente.sugestao = ""  
+        analise_existente.observacao = explicacao
+        analise_existente.porcentagem_evasao = float(probabilidade) * 100
+
+        db.session.add(analise_existente)
+        salvar_feature_importances(contribuicao_df, analise_existente.id)
+    else:
         nova_analise = AnaliseColaborador(
             colaborador_id=colaborador.get('id'),
             evasao="Sim" if int(predicao) == 1 else "Não",
             motivo="",
             sugestao="",
             observacao=explicacao,
-            porcentagem_evasao=float(probabilidade)*100
+            porcentagem_evasao=float(probabilidade) * 100
         )
-        return nova_analise
+        
+        db.session.add(nova_analise)
+        db.session.commit()  
+        salvar_feature_importances(contribuicao_df, nova_analise.id)
+    
+    db.session.commit()
+    return analise_existente or nova_analise
 
 def gerar_dados_colaborador(colaborador):
     respostas = obter_respostas_mais_recentes(colaborador.get('id'))
@@ -252,8 +244,6 @@ def obter_respostas_mais_recentes(colaborador_id):
 
     # Transformar as respostas em dicionário
     respostas_dict = {resposta.pergunta_id: resposta.nota for resposta in respostas_recentes}
-
-    print(respostas_dict)
     
     return respostas_dict
 
