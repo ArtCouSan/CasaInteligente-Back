@@ -358,17 +358,34 @@ class RespostaFechada(db.Model):
             'nota': self.nota,
             'data_hora': self.data_hora.strftime('%Y-%m-%d %H:%M:%S')  # Formatação da data e hora para o formato desejado
         }
+    
+class EvasaoFeatureImportance(db.Model):
+    __tablename__ = 'evasao_feature_importance'
+    id = db.Column(db.Integer, primary_key=True)
+    colaborador_predicao_id = db.Column(db.Integer, db.ForeignKey('colaborador_predicao.id'), nullable=False)
+    motivo = db.Column(db.Text, nullable=True)
+    acuracia = db.Column(db.DECIMAL, default=0)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'colaborador_predicao_id': self.colaborador_predicao_id,
+            'motivo': self.motivo,
+            'acuracia': self.acuracia
+        }
 
 class AnaliseColaborador(db.Model):
     __tablename__ = 'colaborador_predicao'
     id = db.Column(db.Integer, primary_key=True)
     colaborador_id = db.Column(db.Integer, db.ForeignKey('colaborador.id'), nullable=False)
-    evasao = db.Column(db.Text, nullable=False)
-    motivo = db.Column(db.Text, nullable=False)
-    sugestao = db.Column(db.Text, nullable=False)
+    evasao = db.Column(db.Text, nullable=True)
+    motivo = db.Column(db.Text, nullable=True)
+    sugestao = db.Column(db.Text, nullable=True)
     observacao = db.Column(db.Text, nullable=True)
+    porcentagem_evasao = db.Column(db.Integer, nullable=True)
 
     colaborador = db.relationship('Colaborador', backref='analises', lazy=True)
+    feature_importance = db.relationship('EvasaoFeatureImportance', backref='feature_importance', lazy=True)
 
     def to_dict(self):
         return {
@@ -376,7 +393,9 @@ class AnaliseColaborador(db.Model):
             'motivo': self.motivo,
             'evasao': self.evasao,
             'sugestao': self.sugestao,
-            'observacao': self.observacao
+            'observacao': self.observacao,
+            'porcentagem_evasao': self.porcentagem_evasao,
+            'feature_importance': [feature.to_dict() for feature in self.feature_importance]
         }
     
     def to_dict_predicao(self):
@@ -384,5 +403,7 @@ class AnaliseColaborador(db.Model):
             'motivo': self.motivo,
             'evasao': self.evasao,
             'sugestao': self.sugestao,
-            'observacao': self.observacao
+            'observacao': self.observacao,
+            'porcentagem_evasao': self.porcentagem_evasao,
+            'feature_importance': [feature.to_dict() for feature in self.feature_importance]
         }

@@ -109,11 +109,20 @@ CREATE TABLE colaborador_perfil (
 CREATE TABLE colaborador_predicao (
     id INT AUTO_INCREMENT PRIMARY KEY,
     colaborador_id INT,
-    evasao TEXT DEFAULT '',                                        
+    evasao TEXT DEFAULT '',
+    porcentagem_evasao INT DEFAULT 0,                                        
     motivo TEXT DEFAULT '',                                        
     sugestao TEXT DEFAULT '',
     observacao TEXT DEFAULT '',
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE evasao_feature_importance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    colaborador_predicao_id INT,                                       
+    motivo TEXT DEFAULT '', 
+    acuracia DECIMAL(15,2) DEFAULT 0,    
+    FOREIGN KEY (colaborador_predicao_id) REFERENCES colaborador_predicao(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE pergunta (
@@ -172,3 +181,9 @@ CREATE TABLE pesquisa_pergunta (
     FOREIGN KEY (pesquisa_id) REFERENCES pesquisa(id) ON DELETE CASCADE,
     FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+CREATE TABLE contexto_pesquisa (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    descricao TEXT
+);

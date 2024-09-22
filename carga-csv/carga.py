@@ -175,16 +175,17 @@ try:
             # Inserir as predições associadas a esse colaborador (supondo que você tenha essas informações no CSV)
             inserir_predicao_query = """
             INSERT INTO colaborador_predicao (
-                colaborador_id, evasao, motivo, sugestao, observacao
+                colaborador_id, evasao, motivo, sugestao, observacao, porcentagem_evasao
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """
             cursor.execute(inserir_predicao_query, (
                 colaborador_id,
                 row['evasao'],
                 row.get('motivo', ''),
                 row.get('sugestao', ''),
-                row.get('observacao', '')
+                row.get('observacao', ''),
+                row.get('porcentagem_evasao', 0)
             ))
 
             # Inserir o colaborador na tabela de perfil como colaborador

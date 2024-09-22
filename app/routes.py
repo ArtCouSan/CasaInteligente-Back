@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from pymysql import IntegrityError 
+from app.serivces.evasao_service import verificar_evasao_colaborador
 from app.serivces.upload_colaborador_service import processar_csv
 from .models import *
 from bson import ObjectId
@@ -59,9 +60,22 @@ def create_colaborador():
         porcentagem_ultimo_aumento=data.get('porcentagemUltimoAumento', 0),
         senha_hash=123
     )
-    
+
+    # Adicionando e salvando o colaborador
     db.session.add(colaborador)
+    db.session.commit()  # Após o commit, o ID é gerado e associado ao objeto
+
+    # Obter o ID recém-criado
+    colaborador_id = colaborador.id
+    colaborador = Colaborador.query.get_or_404(colaborador_id)
+
+    # Verificar a análise de evasão do colaborador
+    analise = verificar_evasao_colaborador(colaborador.to_dict())
+
+    # Adicionar ou atualizar a análise na sessão
+    db.session.add(analise)
     db.session.commit()
+
     return jsonify(colaborador.to_dict()), 201
 
 @bp.route('/colaborador/<int:id>', methods=['PUT'])
@@ -102,7 +116,18 @@ def update_colaborador(id):
     colaborador.quantidade_horas_treinamento_ano =data.get('quantidadeHorasTreinamentoAno', 0)
     colaborador.porcentagem_ultimo_aumento =data.get('porcentagemUltimoAumento', 0)
 
+    # Salvar alterações no colaborador
     db.session.commit()
+
+    # Verificar a análise de evasão do colaborador
+    analise = verificar_evasao_colaborador(colaborador.to_dict())
+
+    # Adicionar ou atualizar a análise na sessão
+    db.session.add(analise)
+
+    # Commit de todas as alterações
+    db.session.commit()
+
     return jsonify(colaborador.to_dict())
 
 @bp.route('/colaborador/<int:id>', methods=['DELETE'])
@@ -121,44 +146,6 @@ def get_analises_colaboradores():
 def get_analise_colaborador(id):
     analise = AnaliseColaborador.query.get_or_404(id)
     return jsonify(analise.to_dict())
-
-@bp.route('/analise-colaborador', methods=['POST'])
-def create_analise_colaborador():
-    data = request.get_json()
-    colaborador_id = data['colaborador']['id']
-    colaborador = Colaborador.query.get_or_404(colaborador_id)
-
-    analise = AnaliseColaborador(
-        colaborador_id=colaborador.id,
-        predicao=data['predicao'],
-        motivo=data['motivo'],
-        sugestao=data['sugestao'],
-        observacao=data.get('observacao', '')
-    )
-
-    db.session.add(analise)
-    db.session.commit()
-    return jsonify(analise.to_dict()), 201
-
-@bp.route('/analise-colaborador/<int:id>', methods=['PUT'])
-def update_analise_colaborador(id):
-    analise = AnaliseColaborador.query.get_or_404(id)
-    data = request.get_json()
-
-    analise.predicao = data.get('predicao', analise.predicao)
-    analise.motivo = data.get('motivo', analise.motivo)
-    analise.sugestao = data.get('sugestao', analise.sugestao)
-    analise.observacao = data.get('observacao', analise.observacao)
-
-    db.session.commit()
-    return jsonify(analise.to_dict())
-
-@bp.route('/analise-colaborador/<int:id>', methods=['DELETE'])
-def delete_analise_colaborador(id):
-    analise = AnaliseColaborador.query.get_or_404(id)
-    db.session.delete(analise)
-    db.session.commit()
-    return jsonify({'message': 'Análise excluída com sucesso!'}), 200
 
 @bp.route('/generos', methods=['GET'])
 def listar_generos():
@@ -619,44 +606,6 @@ def get_pesquisa_anonima():
     # Inclui as opções de resposta de cada pergunta
     return jsonify(pesquisa.to_dict(include_perguntas=True))
 
-# Rota para listar todas as respostas de uma pesquisa específica
-@bp.route('/pesquisa/<int:pesquisa_id>/respostas', methods=['GET'])
-def get_respostas_by_pesquisa(pesquisa_id):
-    respostas = Resposta.query.filter_by(pesquisa_id=pesquisa_id).all()
-    return jsonify([resposta.to_dict() for resposta in respostas])
-
-# Rota para adicionar uma resposta de um colaborador a uma pergunta em uma pesquisa
-@bp.route('/pesquisa/<int:pesquisa_id>/colaborador/<int:colaborador_id>/resposta', methods=['POST'])
-def create_or_update_resposta_by_pesquisa(pesquisa_id, colaborador_id):
-    data = request.get_json()
-    
-    # Procura por uma resposta existente
-    resposta_existente = Resposta.query.filter_by(
-        colaborador_id=colaborador_id,
-        pergunta_id=data['pergunta_id'],
-        pesquisa_id=pesquisa_id
-    ).first()
-
-    if resposta_existente:
-        resposta_existente.nota = data['nota']  # Atualiza a nota se a resposta existir
-    else:
-        nova_resposta = Resposta(
-            colaborador_id=colaborador_id,
-            pergunta_id=data['pergunta_id'],
-            pesquisa_id=pesquisa_id,  # Associar a pesquisa
-            nota=data['nota'],
-            trimestre=data['trimestre'],
-            ano=data['ano']
-        )
-        db.session.add(nova_resposta)
-
-    try:
-        db.session.commit()
-        return jsonify(nova_resposta.to_dict() if nova_resposta else resposta_existente.to_dict()), 201
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({'error': 'Erro ao salvar resposta'}), 400
-    
 @bp.route('/pesquisa/marcar/<int:id>', methods=['PATCH'])
 def marcar_pesquisa(id):
     data = request.get_json()
@@ -740,3 +689,39 @@ def get_pesquisas_fechadas_com_respostas(colaborador_id):
         # Captura e loga qualquer erro
         print(f"Erro ao obter pesquisas respondidas: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/analise-colaborador/<int:colaborador_id>/recarregar-evasao', methods=['GET'])
+def recarregar_evasao_colaborador(colaborador_id):
+    colaborador = Colaborador.query.get_or_404(colaborador_id)
+
+    # Salvar alterações no colaborador
+    db.session.commit()
+
+    # Verificar a análise de evasão do colaborador
+    analise = verificar_evasao_colaborador(colaborador.to_dict())
+
+    # Adicionar ou atualizar a análise na sessão
+    db.session.add(analise)
+
+    # Commit de todas as alterações
+    db.session.commit()
+    
+    return jsonify({'sucesso': 'Atualizado evasao'}), 200
+
+@bp.route('/analise-colaborador/recarregar-todas-evasoes', methods=['GET'])
+def recarregar_evasao_todos_colaboradores():
+    # Buscar todos os colaboradores no banco de dados
+    colaboradores_ativos = Colaborador.query.filter_by(ex_funcionario=False).all()
+    
+    # Loop para atualizar a análise de evasão de cada colaborador
+    for colaborador in colaboradores_ativos:
+        # Verificar a análise de evasão do colaborador
+        analise = verificar_evasao_colaborador(colaborador.to_dict())
+        
+        # Adicionar ou atualizar a análise na sessão
+        db.session.add(analise)
+    
+    # Commit de todas as alterações
+    db.session.commit()
+    
+    return jsonify({'sucesso': 'Análise de evasão atualizada para todos os colaboradores'}), 200

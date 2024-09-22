@@ -146,3 +146,19 @@ INSERT INTO perfil(nome) VALUES
 ('colaborador'),
 ('dp'),
 ('desenvolvedor');
+
+
+INSERT INTO contexto_pesquisa (nome, descricao)
+VALUES
+('Liderança e Gestão', 'Avaliação sobre líderes e gestores, comunicação e suporte.'),
+('Ambiente de Trabalho', 'Qualidade e conforto do espaço físico e recursos.'),
+('Cultura Organizacional', 'Alinhamento de valores, inclusão e respeito à diversidade.'),
+('Engajamento e Motivação', 'Satisfação com responsabilidades e reconhecimento.'),
+('Desenvolvimento e Carreira', 'Oportunidades de crescimento e desenvolvimento.'),
+('Relacionamento Interpessoal', 'Qualidade das interações e clima entre colegas.'),
+('Equilíbrio Trabalho-Vida', 'Facilidade para balancear demandas pessoais e profissionais.'),
+('Comunicação e Feedback', 'Clareza e abertura na comunicação e feedbacks.'),
+('Processos e Eficiência', 'Eficácia dos processos internos e autonomia.'),
+('Satisfação com Benefícios e Compensações', 'Adequação dos benefícios e compensações.'),
+('Saúde e Bem-Estar', 'Acesso a programas de bem-estar e suporte.'),
+('Inovação e Criatividade', 'Espaço para inovação e participação em projetos.');
