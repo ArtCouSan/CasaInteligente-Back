@@ -248,7 +248,6 @@ class PesquisaPergunta(db.Model):
     pesquisa = db.relationship("Pesquisa", back_populates="pesquisa_perguntas", overlaps="perguntas")
     pergunta = db.relationship("Pergunta", back_populates="pesquisa_perguntas", overlaps="pesquisas")
 
-
 class Pesquisa(db.Model):
     __tablename__ = 'pesquisa'
     id = db.Column(db.Integer, primary_key=True, index=True)
@@ -288,6 +287,7 @@ class Pergunta(db.Model):
     # Relacionamento many-to-many com Pesquisa através de PesquisaPergunta
     pesquisa_perguntas = db.relationship("PesquisaPergunta", back_populates="pergunta", cascade="all, delete-orphan", overlaps="pesquisas")
     pesquisas = db.relationship("Pesquisa", secondary='pesquisa_pergunta', back_populates="perguntas", overlaps="pergunta,pesquisa_perguntas")
+    contextos_pergunta = db.relationship('PerguntaContexto', back_populates='pergunta')
 
     def to_dict(self, include_respostas=False):
         data = {
@@ -297,7 +297,6 @@ class Pergunta(db.Model):
         if include_respostas:
             data['opcoes_resposta'] = [resposta.to_dict() for resposta in self.respostas_pergunta]
         return data
-
     
 class RespostaOpcao(db.Model):
     __tablename__ = 'resposta_opcao'
@@ -406,4 +405,50 @@ class AnaliseColaborador(db.Model):
             'observacao': self.observacao,
             'porcentagem_evasao': self.porcentagem_evasao,
             'feature_importance': [feature.to_dict() for feature in self.feature_importance]
+        }
+    
+class Contexto(db.Model):
+    __tablename__ = 'contexto'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.Text, nullable=True)
+    descricao = db.Column(db.Text, nullable=True)
+
+    perguntas_contexto = db.relationship('PerguntaContexto', back_populates='contexto')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome,
+            'descricao': self.descricao
+        }
+    
+class PerguntaContexto(db.Model):
+    __tablename__ = 'pergunta_contexto'
+    
+    contexto_id = db.Column(db.Integer, db.ForeignKey('contexto.id', ondelete='CASCADE'), primary_key=True)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta.id', ondelete='CASCADE'), primary_key=True)
+    
+    contexto = db.relationship("Contexto", back_populates="perguntas_contexto")
+    pergunta = db.relationship("Pergunta", back_populates="contextos_pergunta")
+
+
+class Termometro(db.Model):
+    __tablename__ = 'termometro'
+    id = db.Column(db.Integer, primary_key=True)
+    proximidade_bom = db.Column(db.DECIMAL, default=0)
+    motivo = db.Column(db.Text, nullable=True)
+    status = db.Column(db.Text, nullable=True)
+    contexto_id = db.Column(db.Integer, db.ForeignKey('contexto.id'), nullable=False)
+
+    contexto = db.relationship('Contexto', backref='termometros', lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'proximidade_bom': self.proximidade_bom,
+            'motivo': self.motivo,
+            'status': self.status,
+            'contexto_id': self.contexto_id,
+            'contexto_nome': self.contexto.nome if self.contexto else None,
+            'contexto_descricao': self.contexto.descricao if self.contexto else None
         }

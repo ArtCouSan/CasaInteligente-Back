@@ -138,7 +138,7 @@ try:
                 row.get('genero_id'),  # Pega o genero_id diretamente do DataFrame
                 row.get('estado_civil_id'),  # Pega o estado_civil_id diretamente do DataFrame
                 row.get('telefone', ''),  # Pega o telefone, com valor padrão como string vazia se não existir
-                row.get('email', ''),  # Pega o email, com valor padrão como string vazia se não existir
+                'rm97804arthur@gmail.com',  # Pega o email, com valor padrão como string vazia se não existir
                 '123',  # senha_hash fixo
                 row.get('formacao_id'),  # Pega o formacao_id diretamente do DataFrame
                 row.get('faculdade_id', 1),  # Pega o faculdade_id, com valor padrão 1 se não existir
@@ -201,6 +201,21 @@ try:
                     resposta_nota = row[coluna]
                     inserir_resposta_query = """
                     INSERT INTO resposta_fechada (colaborador_id, pesquisa_id, pergunta_id, nota)
+                    VALUES (%s, %s, %s, %s)
+                    """
+                    cursor.execute(inserir_resposta_query, (
+                        colaborador_id,
+                        pesquisa_id,
+                        pergunta_id,
+                        resposta_nota
+                    ))
+
+            # Inserir as respostas associadas a esse colaborador
+            for coluna, pergunta_id in pergunta_ids.items():
+                if pergunta_id and not pd.isna(row[coluna]):
+                    resposta_nota = row[coluna]
+                    inserir_resposta_query = """
+                    INSERT INTO resposta_anonima (colaborador_id, pesquisa_id, pergunta_id, nota)
                     VALUES (%s, %s, %s, %s)
                     """
                     cursor.execute(inserir_resposta_query, (

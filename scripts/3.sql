@@ -148,7 +148,7 @@ INSERT INTO perfil(nome) VALUES
 ('desenvolvedor');
 
 
-INSERT INTO contexto_pesquisa (nome, descricao)
+INSERT INTO contexto (nome, descricao)
 VALUES
 ('Liderança e Gestão', 'Avaliação sobre líderes e gestores, comunicação e suporte.'),
 ('Ambiente de Trabalho', 'Qualidade e conforto do espaço físico e recursos.'),
@@ -162,3 +162,76 @@ VALUES
 ('Satisfação com Benefícios e Compensações', 'Adequação dos benefícios e compensações.'),
 ('Saúde e Bem-Estar', 'Acesso a programas de bem-estar e suporte.'),
 ('Inovação e Criatividade', 'Espaço para inovação e participação em projetos.');
+
+-- 1. Satisfação no Trabalho -> Engajamento e Motivação (contexto_id = 4)
+INSERT INTO pergunta_contexto (contexto_id, pergunta_id)
+VALUES 
+(4, 1);
+
+-- 2. Satisfação com o Ambiente -> Ambiente de Trabalho (contexto_id = 2)
+INSERT INTO pergunta_contexto (contexto_id, pergunta_id)
+VALUES 
+(2, 2);
+
+-- 3. Envolvimento no Trabalho -> Engajamento e Motivação (contexto_id = 4)
+INSERT INTO pergunta_contexto (contexto_id, pergunta_id)
+VALUES 
+(4, 3);
+
+-- 4. Satisfação com o Relacionamento -> Relacionamento Interpessoal (contexto_id = 6)
+INSERT INTO pergunta_contexto (contexto_id, pergunta_id)
+VALUES 
+(6, 4);
+
+-- 5. Equilíbrio Trabalho-Vida -> Equilíbrio Trabalho-Vida (contexto_id = 7)
+INSERT INTO pergunta_contexto (contexto_id, pergunta_id)
+VALUES 
+(7, 5);
+
+-- Termômetro para 'Liderança e Gestão'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 1);
+
+-- Termômetro para 'Ambiente de Trabalho'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 2);
+
+-- Termômetro para 'Cultura Organizacional'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 3);
+
+-- Termômetro para 'Engajamento e Motivação'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 4);
+
+-- Termômetro para 'Desenvolvimento e Carreira'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 5);
+
+-- Termômetro para 'Relacionamento Interpessoal'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 6);
+
+-- Termômetro para 'Equilíbrio Trabalho-Vida'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 7);
+
+-- Termômetro para 'Comunicação e Feedback'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 8);
+
+-- Termômetro para 'Processos e Eficiência'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 9);
+
+-- Termômetro para 'Satisfação com Benefícios e Compensações'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 10);
+
+-- Termômetro para 'Saúde e Bem-Estar'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 11);
+
+-- Termômetro para 'Inovação e Criatividade'
+INSERT INTO termometro (motivo, proximidade_bom, status, contexto_id)
+VALUES ('', 0, '', 12);

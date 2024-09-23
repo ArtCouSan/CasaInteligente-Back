@@ -19,12 +19,22 @@ splits_directory = os.path.join(current_directory, r"app\chat\splits")
 splits_filepath = os.path.join(splits_directory, 'splits.pkl')
 faiss_directory = os.path.join(current_directory, r"app\chat\faiss_index")
 
-# Função para carregar os splits
+# Função para carregar os splits com tratamento de erros
 def load_splits(filepath):
-    with open(filepath, 'rb') as file:
-        splits = pickle.load(file)
-    return splits
-
+    try:
+        with open(filepath, 'rb') as file:
+            splits = pickle.load(file)
+        return splits
+    except FileNotFoundError:
+        print(f"Arquivo '{filepath}' não encontrado. Verifique o caminho.")
+        exit(1)
+    except pickle.UnpicklingError:
+        print(f"Erro ao deserializar o arquivo '{filepath}'.")
+        exit(1)
+    except Exception as e:
+        print(f"Erro desconhecido ao carregar '{filepath}': {str(e)}")
+        exit(1)
+        
 # Carregar os splits usando o caminho relativo
 splits = load_splits(splits_filepath)
 

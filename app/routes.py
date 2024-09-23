@@ -1,6 +1,9 @@
 from flask import Blueprint, jsonify, request, session
-from pymysql import IntegrityError 
+from pymysql import IntegrityError
+from sqlalchemy import asc, desc, func 
+from app.serivces.email_service import enviar_email
 from app.serivces.evasao_service import verificar_evasao_colaborador
+from app.serivces.termometro_service import analisar, categorizar_nota, salvar_pergunta_contexto
 from app.serivces.upload_colaborador_service import processar_csv
 from .models import *
 from bson import ObjectId
@@ -8,13 +11,59 @@ from . import mongo
 from app.chat.ia_service import fazer_pergunta, gerar_nova_sugestao_ia, gerar_novo_motivo_ia
 from flask import send_file
 import os
+from math import ceil
+from sqlalchemy.orm import joinedload
 
 bp = Blueprint('colaborador', __name__)
 
+from sqlalchemy.orm import joinedload
+
 @bp.route('/colaboradores', methods=['GET'])
 def get_colaboradores():
-    colaboradores = Colaborador.query.all()
-    return jsonify([colaborador.to_dict() for colaborador in colaboradores])
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 5, type=int)
+    search_query = request.args.get('search', '', type=str)
+    sort_column = request.args.get('sortColumn', '', type=str)
+    sort_direction = request.args.get('sortDirection', 'asc', type=str)
+
+    # Filtro de busca
+    query = Colaborador.query.join(Colaborador.departamento)  # Faz o join com a tabela Departamento
+    
+    if search_query:
+        # Acesse diretamente a coluna `nome` da tabela `Departamento`
+        query = query.filter(
+            Colaborador.nome.ilike(f"%{search_query}%") |
+            Colaborador.cpf.ilike(f"%{search_query}%") |
+            Departamento.nome.ilike(f"%{search_query}%")  # Altere `nome` para a coluna correta no modelo Departamento
+        )
+
+    # Aplicando a ordenação
+    if sort_column and sort_direction:
+        # Verifica se a coluna pertence ao modelo Colaborador
+        if hasattr(Colaborador, sort_column):
+            if sort_direction == 'asc':
+                query = query.order_by(asc(getattr(Colaborador, sort_column)))
+            elif sort_direction == 'desc':
+                query = query.order_by(desc(getattr(Colaborador, sort_column)))
+        # Verifica se a coluna pertence ao modelo Departamento
+        elif hasattr(Departamento, sort_column):
+            if sort_direction == 'asc':
+                query = query.order_by(asc(getattr(Departamento, sort_column)))
+            elif sort_direction == 'desc':
+                query = query.order_by(desc(getattr(Departamento, sort_column)))
+
+    # Paginação
+    paginated_colaboradores = query.paginate(page=page, per_page=per_page, error_out=False)
+    colaboradores = paginated_colaboradores.items
+
+    total_items = paginated_colaboradores.total  # Número total de registros na tabela
+
+    return jsonify({
+        'colaboradores': [colaborador.to_dict() for colaborador in colaboradores],
+        'total_pages': paginated_colaboradores.pages,
+        'current_page': page,
+        'total_items': total_items
+    })
 
 @bp.route('/colaborador/<int:id>', methods=['GET'])
 def get_colaborador(id):
@@ -139,8 +188,51 @@ def delete_colaborador(id):
 
 @bp.route('/analise-colaboradores', methods=['GET'])
 def get_analises_colaboradores():
-    analises = AnaliseColaborador.query.all()
-    return jsonify([analise.to_dict() for analise in analises])
+    # Captura os parâmetros da query string
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 5, type=int)
+    search_query = request.args.get('search', '', type=str)
+    sort_column = request.args.get('sortColumn', '', type=str)
+    sort_direction = request.args.get('sortDirection', 'asc', type=str)  # Valor padrão 'asc'
+
+    # Filtro de busca
+    query = AnaliseColaborador.query.join(AnaliseColaborador.colaborador)  # Faz o join com a tabela Colaborador
+
+    if search_query:
+        # Assumindo que 'colaborador' é a relação e 'nome' e 'cargo' são os atributos do modelo Colaborador
+        query = query.filter(
+            Colaborador.nome.ilike(f"%{search_query}%") |
+            Colaborador.cpf.ilike(f"%{search_query}%")
+        )
+
+    # Aplicando a ordenação
+    if sort_column and sort_direction:
+        # Verifica se a coluna pertence ao modelo AnaliseColaborador
+        if hasattr(AnaliseColaborador, sort_column):
+            if sort_direction == 'asc':
+                query = query.order_by(asc(getattr(AnaliseColaborador, sort_column)))
+            elif sort_direction == 'desc':
+                query = query.order_by(desc(getattr(AnaliseColaborador, sort_column)))
+        # Verifica se a coluna pertence ao modelo Colaborador
+        elif hasattr(Colaborador, sort_column):
+            if sort_direction == 'asc':
+                query = query.order_by(asc(getattr(Colaborador, sort_column)))
+            elif sort_direction == 'desc':
+                query = query.order_by(desc(getattr(Colaborador, sort_column)))
+
+    # Paginação
+    paginated_analises = query.paginate(page=page, per_page=per_page, error_out=False)
+    analises = paginated_analises.items
+
+    total_items = paginated_analises.total  # Número total de registros na tabela
+
+    # Retorna os dados em formato JSON
+    return jsonify({
+        'analises': [analise.to_dict() for analise in analises],
+        'total_pages': paginated_analises.pages,
+        'current_page': page,
+        'total_items': total_items
+    })
 
 @bp.route('/analise-colaborador/<int:id>', methods=['GET'])
 def get_analise_colaborador(id):
@@ -214,8 +306,6 @@ def create_pergunta():
     # Verifica se há opções de resposta associadas e as adiciona
     opcoes_resposta = data.get('opcoes_resposta', [])
 
-    print(opcoes_resposta)
-    
     for opcao in opcoes_resposta:
         resposta_opcao = RespostaOpcao(
             texto=opcao.get('texto'),
@@ -225,6 +315,8 @@ def create_pergunta():
         db.session.add(resposta_opcao)
 
     db.session.commit()
+
+    salvar_pergunta_contexto(pergunta)
 
     # Retorna a pergunta com as opções de resposta
     return jsonify(pergunta.to_dict(include_respostas=True)), 201
@@ -256,12 +348,19 @@ def update_pergunta(id):
     # Salva as alterações no banco de dados
     db.session.commit()
 
+    salvar_pergunta_contexto(pergunta)
+
     return jsonify(pergunta.to_dict(include_respostas=True))
 
-# Rota para deletar uma pergunta
 @bp.route('/pergunta/<int:id>', methods=['DELETE'])
 def delete_pergunta(id):
+    # Obtém a pergunta, ou retorna 404 se não existir
     pergunta = Pergunta.query.get_or_404(id)
+    
+    # Deletar todas as associações na tabela PerguntaContexto
+    PerguntaContexto.query.filter_by(pergunta_id=pergunta.id).delete()
+
+    # Agora, exclui a pergunta
     db.session.delete(pergunta)
     db.session.commit()
     return jsonify({'message': 'Pergunta excluída com sucesso!'}), 200
@@ -498,8 +597,6 @@ def login():
     perfis = colaborador.perfis
     perfis_data = [perfil.to_dict() for perfil in perfis]
 
-    print(perfis_data)
-
     return jsonify(colaborador.to_dict()), 200
     
 @bp.route('/logout', methods=['POST'])
@@ -631,6 +728,10 @@ def marcar_pesquisa(id):
             # Marca a pesquisa atual como anônima
             pesquisa.is_pesquisa_anonima = is_anonima
 
+        colaboradores = Colaborador.query.filter(Colaborador.ex_funcionario == False).limit(5).all()
+        for colaborador in colaboradores:
+            enviar_email(colaborador, pesquisa)
+
         # Comitar as alterações
         db.session.commit()
         return jsonify(pesquisa.to_dict()), 200
@@ -678,9 +779,6 @@ def get_pesquisas_fechadas_com_respostas(colaborador_id):
                 'respostas': [resposta.to_dict() for resposta in respostas]  # Inclui as respostas
             }
 
-            # Log para verificar a estrutura da pesquisa_dict
-            print(f"Pesquisa dict montada: {pesquisa_dict}")
-
             resultado.append(pesquisa_dict)
 
         # Retorna o resultado final como JSON
@@ -725,3 +823,171 @@ def recarregar_evasao_todos_colaboradores():
     db.session.commit()
     
     return jsonify({'sucesso': 'Análise de evasão atualizada para todos os colaboradores'}), 200
+    
+@bp.route('/termometro/<int:contexto_id>', methods=['GET'])
+def analisar_respostas_por_contexto_especifico(contexto_id):
+    try:
+        # Obter o termômetro específico
+        termometro = Termometro.query.filter_by(contexto_id=contexto_id).first()
+        contexto = Contexto.query.filter_by(id=contexto_id).first()
+
+        if not termometro:
+            return jsonify({'error': 'Termômetro não encontrado.'}), 404
+        
+        # Obter perguntas e respostas associadas ao contexto
+        respostas = db.session.query(
+            Pergunta.texto.label('pergunta_texto'),
+            RespostaAnonima.nota.label('nota')
+        ).join(
+            Pergunta, RespostaAnonima.pergunta_id == Pergunta.id
+        ).join(
+            PerguntaContexto, PerguntaContexto.pergunta_id == Pergunta.id
+        ).filter(
+            PerguntaContexto.contexto_id == contexto_id
+        ).all()
+
+        # Preparar informações para análise
+        perguntas_respostas = "\n".join(
+            [f"Pergunta: {resposta.pergunta_texto}, Nota: {resposta.nota}" for resposta in respostas]
+        )
+
+        resultado = db.session.query(
+            Contexto.id.label('contexto_id'),
+            Contexto.nome.label('contexto_nome'),
+            func.avg(RespostaAnonima.nota).label('media_nota'),
+            func.min(RespostaOpcao.nota).label('min_nota'),
+            func.max(RespostaOpcao.nota).label('max_nota'),
+            func.count(RespostaAnonima.id).label('total_respostas')
+        ).join(
+            PerguntaContexto, PerguntaContexto.contexto_id == Contexto.id
+        ).outerjoin(
+            RespostaAnonima, RespostaAnonima.pergunta_id == PerguntaContexto.pergunta_id
+        ).outerjoin(
+            RespostaOpcao, RespostaOpcao.pergunta_id == PerguntaContexto.pergunta_id
+        ).group_by(
+            Contexto.id, Contexto.nome
+        ).filter(
+            Contexto.id == contexto_id
+        ).first()
+
+        print(resultado)
+
+        # Calcular a proximidade_bom e a categoria
+        proximidade_bom, status =  categorizar_nota(resultado.media_nota, resultado.min_nota, resultado.max_nota)
+
+        # Atualizar o valor de proximidade_bom no termômetro
+        termometro.proximidade_bom = proximidade_bom
+        termometro.status = status
+
+        # Gerar análise usando a nova métrica
+        analise = analisar(termometro, contexto, perguntas_respostas, resultado.min_nota, resultado.max_nota, resultado.media_nota)
+
+        # Dividir a análise em motivo e sugestões
+        if "Sugestões:" in analise:
+            motivo, sugestoes = analise.split("Sugestões:")
+            motivo = motivo.strip()
+            sugestoes = sugestoes.strip()
+        else:
+            motivo = analise
+            sugestoes = "Nenhuma sugestão adicional fornecida."
+
+        # Atualizar o motivo e sugestões no termômetro
+        termometro.motivo = motivo
+        termometro.sugestao = sugestoes
+
+        db.session.commit()
+
+        return jsonify(termometro.to_dict()), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/termometros', methods=['GET'])
+def listar_todos_termometros():
+    try:
+        # Consulta para obter todos os contextos
+        todos_contextos = db.session.query(Contexto).all()
+
+        # Consulta para agrupar respostas por contexto e calcular média das notas
+        resultados = db.session.query(
+            Contexto.id.label('contexto_id'),
+            Contexto.nome.label('contexto_nome'),
+            func.avg(RespostaAnonima.nota).label('media_nota'),
+            func.min(RespostaOpcao.nota).label('min_nota'),
+            func.max(RespostaOpcao.nota).label('max_nota'),
+            func.count(RespostaAnonima.id).label('total_respostas')
+        ).join(
+            PerguntaContexto, PerguntaContexto.contexto_id == Contexto.id
+        ).outerjoin(
+            RespostaAnonima, RespostaAnonima.pergunta_id == PerguntaContexto.pergunta_id
+        ).outerjoin(
+            RespostaOpcao, RespostaOpcao.pergunta_id == PerguntaContexto.pergunta_id
+        ).group_by(
+            Contexto.id, Contexto.nome
+        ).all()
+
+        # Cria um dicionário de resultados para facilitar o preenchimento
+        resultados_dict = {}
+        for resultado in resultados:
+            proximidade_bom, status = categorizar_nota(resultado.media_nota, resultado.min_nota, resultado.max_nota) if resultado.media_nota is not None else (None, 'neutro')
+            resultados_dict[resultado.contexto_id] = {
+                'contexto_id': resultado.contexto_id,
+                'contexto_nome': resultado.contexto_nome,
+                'proximidade_bom': round(proximidade_bom, 2) if proximidade_bom is not None else None,
+                'status': status,
+                'total_respostas': resultado.total_respostas,
+                'motivo': f'O status para este contexto é {status} com base na média das respostas.'
+                if resultado.media_nota is not None else 'Nenhuma resposta disponível para este contexto.'
+            }
+
+        # Atualiza ou insere os valores na tabela 'termometro'
+        for contexto in todos_contextos:
+            if contexto.id in resultados_dict:
+                resultado = resultados_dict[contexto.id]
+                # Verifica se já existe um termômetro para o contexto
+                termometro_existente = Termometro.query.filter_by(contexto_id=contexto.id).first()
+                if termometro_existente:
+                    # Atualiza os dados do termômetro existente
+                    termometro_existente.proximidade_bom = resultado['proximidade_bom']
+                    termometro_existente.status = resultado['status']
+                else:
+                    # Cria um novo termômetro para o contexto
+                    novo_termometro = Termometro(
+                        contexto_id=contexto.id,
+                        proximidade_bom=resultado['proximidade_bom'],
+                        motivo=resultado['motivo'],
+                        status=resultado['status']
+                    )
+                    db.session.add(novo_termometro)
+            else:
+                # Contextos sem respostas são adicionados como 'neutro' no termômetro
+                termometro_existente = Termometro.query.filter_by(contexto_id=contexto.id).first()
+                if termometro_existente:
+                    # Atualiza para 'neutro' se necessário
+                    if termometro_existente.status != 'neutro':
+                        termometro_existente.proximidade_bom = None
+                        termometro_existente.motivo = 'Nenhuma resposta disponível para este contexto.'
+                        termometro_existente.status = 'neutro'
+                else:
+                    # Cria um novo termômetro para contextos que não existem na tabela
+                    novo_termometro = Termometro(
+                        contexto_id=contexto.id,
+                        proximidade_bom=None,
+                        motivo='Nenhuma resposta disponível para este contexto.',
+                        status='neutro'
+                    )
+                    db.session.add(novo_termometro)
+
+        # Commit das alterações no banco de dados
+        db.session.commit()
+
+        # Retorna todos os termômetros atualizados
+        termometros_atualizados = Termometro.query.all()
+        termometros_response = [termometro.to_dict() for termometro in termometros_atualizados]
+
+        return jsonify(termometros_response), 200
+
+    except Exception as e:
+        db.session.rollback()  # Reverter alterações em caso de erro
+        return jsonify({'error': str(e)}), 500

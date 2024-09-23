@@ -182,8 +182,25 @@ CREATE TABLE pesquisa_pergunta (
     FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE contexto_pesquisa (
+CREATE TABLE contexto (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     descricao TEXT
 );
+
+CREATE TABLE pergunta_contexto (
+    contexto_id INT NOT NULL,
+    pergunta_id INT NOT NULL,
+    PRIMARY KEY (pergunta_id, contexto_id),
+    FOREIGN KEY (contexto_id) REFERENCES contexto(id) ON DELETE CASCADE,
+    FOREIGN KEY (pergunta_id) REFERENCES pergunta(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE termometro (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    motivo VARCHAR(500) NOT NULL,
+    proximidade_bom DECIMAL(15,2) DEFAULT 0, 
+    status VARCHAR(255) NOT NULL,
+    contexto_id INT NOT NULL,
+    FOREIGN KEY (contexto_id) REFERENCES contexto(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
