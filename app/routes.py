@@ -5,6 +5,8 @@ from app.serivces.email_service import enviar_email
 from app.serivces.evasao_service import verificar_evasao_colaborador
 from app.serivces.termometro_service import analisar, categorizar_nota, salvar_pergunta_contexto
 from app.serivces.upload_colaborador_service import processar_csv
+from app.serivces.upload_perguntas_service import processar_csv_perguntas_respostas
+from app.serivces.upload_questionario_service import processar_csv_pesquisa
 from .models import *
 from bson import ObjectId
 from . import mongo     
@@ -568,7 +570,45 @@ def upload_colaboradores():
     else:
         return jsonify({'error': 'Tipo de arquivo não permitido, apenas CSVs são aceitos'}), 400
     
-@bp.route('/download-template', methods=['GET'])
+@bp.route('/pergunta/upload', methods=['POST'])
+def upload_pergunta():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
+    
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'Nenhum arquivo foi selecionado'}), 400
+    
+    if file and file.filename.endswith('.csv'):
+        try:
+            resultado = processar_csv_perguntas_respostas(file)
+            return jsonify({'message': resultado}), 200
+        except Exception as e:
+            return jsonify({'error': f'Erro ao processar o arquivo: {str(e)}'}), 500
+    else:
+        return jsonify({'error': 'Tipo de arquivo não permitido, apenas CSVs são aceitos'}), 400
+    
+@bp.route('/pesquisa/upload', methods=['POST'])
+def upload_pesquisa():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
+    
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'Nenhum arquivo foi selecionado'}), 400
+    
+    if file and file.filename.endswith('.csv'):
+        try:
+            resultado = processar_csv_pesquisa(file)
+            return jsonify({'message': resultado}), 200
+        except Exception as e:
+            return jsonify({'error': f'Erro ao processar o arquivo: {str(e)}'}), 500
+    else:
+        return jsonify({'error': 'Tipo de arquivo não permitido, apenas CSVs são aceitos'}), 400
+    
+@bp.route('/colaborador/download-template', methods=['GET'])
 def download_template():
     # Ajusta o caminho para ser absoluto
     filepath = os.path.abspath(os.path.join('app', 'templates', 'colaborador.csv'))
@@ -579,6 +619,30 @@ def download_template():
     
     # Retorna o arquivo para download
     return send_file(filepath, as_attachment=True, download_name='colaborador.csv', mimetype='text/csv')
+
+@bp.route('/pergunta/download-template', methods=['GET'])
+def download_pergunta():
+    # Ajusta o caminho para ser absoluto
+    filepath = os.path.abspath(os.path.join('app', 'templates', 'pergunta.csv'))
+    
+    # Verifica se o arquivo existe
+    if not os.path.exists(filepath):
+        return {"error": "Template file not found"}, 404
+    
+    # Retorna o arquivo para download
+    return send_file(filepath, as_attachment=True, download_name='pergunta.csv', mimetype='text/csv')
+
+@bp.route('/pesquisa/download-template', methods=['GET'])
+def download_pesquisa():
+    # Ajusta o caminho para ser absoluto
+    filepath = os.path.abspath(os.path.join('app', 'templates', 'pesquisa.csv'))
+    
+    # Verifica se o arquivo existe
+    if not os.path.exists(filepath):
+        return {"error": "Template file not found"}, 404
+    
+    # Retorna o arquivo para download
+    return send_file(filepath, as_attachment=True, download_name='pesquisa.csv', mimetype='text/csv')
 
 @bp.route('/login', methods=['POST'])
 def login():

@@ -1,0 +1,7 @@
+tipo_registro,texto_pergunta,texto_resposta,nota_resposta
+pergunta,Como você avalia a qualidade do ambiente de trabalho?,,
+resposta_opcao,,"Excelente",5
+resposta_opcao,,"Bom",4
+resposta_opcao,,"Regular",3
+resposta_opcao,,"Ruim",2
+resposta_opcao,,"Muito Ruim",1
