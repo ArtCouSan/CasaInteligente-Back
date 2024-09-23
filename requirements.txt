@@ -17,4 +17,4 @@ flask_sqlalchemy
 flask_pymongo
 mysql-connector-python
 faker
-symspellpy
+pyspellchecker

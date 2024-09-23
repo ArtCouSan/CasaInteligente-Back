@@ -1,3 +1,4 @@
+import logging
 from transformers import AutoTokenizer, AutoModel
 import torch
 import pandas as pd
@@ -5,22 +6,17 @@ from werkzeug.utils import secure_filename
 import os
 from app import db
 from app.models import *
-from transformers import AutoTokenizer, AutoModel, pipeline
-from symspellpy import SymSpell, Verbosity
-import pkg_resources
+from spellchecker import SpellChecker
+
+# Configurar o logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Inicializar PySpellChecker para português
+spell = SpellChecker(language='pt')
 
 # Carregar o modelo BERT e o tokenizer
 tokenizer = AutoTokenizer.from_pretrained('neuralmind/bert-base-portuguese-cased')
 model = AutoModel.from_pretrained('neuralmind/bert-base-portuguese-cased')
-
-# Configurar SymSpell para correção ortográfica
-sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_pt.txt")
-bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_pt.txt")
-
-# Carregar dicionário de correção ortográfica
-sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
-sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
 
 UPLOAD_FOLDER = 'uploads/'
 
@@ -32,38 +28,53 @@ def obter_sinonimos(tabela, coluna):
     """Obtém as descrições de uma tabela específica para normalização."""
     sinonimos = {}
     registros = db.session.query(tabela).all()
+    logging.info(f"Obtendo sinonimos para {tabela.__name__} na coluna {coluna}")
     for registro in registros:
-        descricao = getattr(registro, coluna)
-        sinonimos[descricao] = [descricao]  # Cada descrição é inicialmente mapeada para si mesma
+        descricao = getattr(registro, coluna, None)
+        if descricao:
+            sinonimos[descricao] = [descricao]  # Cada descrição é inicialmente mapeada para si mesma
+    logging.debug(f"Sinonimos obtidos: {sinonimos}")
     return sinonimos
 
 def obter_primeiro_registro(tabela, coluna):
     """Retorna a primeira descrição da tabela para uso como padrão."""
     primeiro_registro = db.session.query(tabela).first()
-    return getattr(primeiro_registro, coluna) if primeiro_registro else None
+    if primeiro_registro:
+        descricao = getattr(primeiro_registro, coluna, None)
+        logging.debug(f"Primeiro registro de {tabela.__name__} na coluna {coluna}: {descricao}")
+        return descricao
+    else:
+        logging.warning(f"Não há registros na tabela {tabela.__name__}.")
+    return None
 
 def obter_ou_criar_registro(tabela, descricao, coluna):
     """Obtém um registro existente ou cria um novo com a descrição fornecida."""
+    logging.info(f"Procurando por registro na tabela {tabela.__name__} com {coluna}='{descricao}'")
     registro = db.session.query(tabela).filter_by(**{coluna: descricao}).first()
     if registro:
+        logging.info(f"Registro encontrado: {registro}")
         return registro
     else:
         # Criar novo registro com a descrição fornecida
+        logging.info(f"Registro não encontrado, criando novo registro em {tabela.__name__} com {coluna}='{descricao}'")
         novo_registro = tabela(**{coluna: descricao})
         db.session.add(novo_registro)
         db.session.commit()
+        logging.info(f"Novo registro criado: {novo_registro}")
         return novo_registro
 
-def corrigir_ortografia(descricao):
-    """Corrige erros ortográficos utilizando SymSpell."""
-    suggestions = sym_spell.lookup_compound(descricao, max_edit_distance=2)
-    if suggestions:
-        return suggestions[0].term
-    return descricao
+def corrigir_ortografia_pyspellchecker(descricao):
+    """Corrige erros ortográficos utilizando PySpellChecker."""
+    logging.debug(f"Corrigindo ortografia para: {descricao}")
+    palavras = descricao.split()
+    palavras_corrigidas = [spell.correction(palavra) for palavra in palavras]
+    descricao_corrigida = ' '.join(palavras_corrigidas)
+    logging.debug(f"Ortografia corrigida: {descricao_corrigida}")
+    return descricao_corrigida
 
 def calcular_similaridade(descricao, candidatos):
     """Calcula a similaridade semântica entre a descrição e uma lista de candidatos."""
-    descricao_corrigida = corrigir_ortografia(descricao)  # Corrigir ortografia antes de calcular a similaridade
+    descricao_corrigida = corrigir_ortografia_pyspellchecker(descricao)  # Corrigir ortografia com PySpellChecker
     descricao_tokens = tokenizer(descricao_corrigida, return_tensors='pt')
     descricao_embedding = model(**descricao_tokens).last_hidden_state.mean(dim=1)
 
@@ -79,7 +90,7 @@ def calcular_similaridade(descricao, candidatos):
     maior_similaridade, indice = similaridades.max(dim=0)
     
     # Debug: imprimir similaridades e o valor escolhido
-    print(f"Descrição Original: {descricao}, Descrição Corrigida: {descricao_corrigida}, Similaridade: {maior_similaridade.item()}, Escolha: {candidatos[indice]}")
+    logging.debug(f"Descrição Original: {descricao}, Descrição Corrigida: {descricao_corrigida}, Similaridade: {maior_similaridade.item()}, Escolha: {candidatos[indice]}")
     
     return candidatos[indice] if maior_similaridade.item() > 0.80 else None
 
@@ -87,6 +98,7 @@ def normalizar_descricao_ou_criar(descricao, tabela, coluna, sinonimos, descrica
     """Normaliza a descrição utilizando similaridade semântica ou cria um novo registro."""
     if not descricao:
         # Caso venha vazio, retorna o padrão
+        logging.debug(f"Descrição vazia para {tabela.__name__}. Usando valor padrão: {descricao_padrao}")
         return descricao_padrao
     
     candidatos = list(sinonimos.keys())
@@ -96,13 +108,17 @@ def normalizar_descricao_ou_criar(descricao, tabela, coluna, sinonimos, descrica
         return descricao_normalizada
     else:
         # Se não encontrar similaridade, cria um novo registro
+        logging.info(f"Sem similaridade encontrada. Criando novo registro para {descricao} na tabela {tabela.__name__}")
         novo_registro = obter_ou_criar_registro(tabela, descricao, coluna)
-        return novo_registro.descricao
+        
+        # Corrigir aqui para retornar o valor do atributo correto
+        return getattr(novo_registro, coluna)
 
 def processar_csv(file):
     filename = secure_filename(file.filename)
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
+    logging.info(f"Arquivo {filename} salvo com sucesso em {filepath}")
 
     try:
         # Obter sinônimos das tabelas do banco de dados
@@ -129,8 +145,10 @@ def processar_csv(file):
 
         df = pd.read_csv(filepath)
         df.fillna('', inplace=True)
+        logging.info(f"Arquivo CSV lido com sucesso. Iniciando processamento de {len(df)} registros.")
 
         for index, row in df.iterrows():
+            logging.debug(f"Processando linha {index}: {row.to_dict()}")
             # Normalizar descrições ou criar novos registros se necessário
             row['genero'] = normalizar_descricao_ou_criar(row['genero'], Genero, 'descricao', sinonimos_genero, padrao_genero)
             row['estadoCivil'] = normalizar_descricao_ou_criar(row['estadoCivil'], EstadoCivil, 'descricao', sinonimos_estado_civil, padrao_estado_civil)
@@ -143,6 +161,7 @@ def processar_csv(file):
             row['setor'] = normalizar_descricao_ou_criar(row['setor'], Setor, 'nome', sinonimos_setor, padrao_setor)
 
             # Verificar e aplicar as normalizações antes das consultas
+            logging.debug(f"Verificando registros no banco de dados para a linha {index}")
             genero = Genero.query.filter_by(descricao=row['genero']).first()
             estado_civil = EstadoCivil.query.filter_by(descricao=row['estadoCivil']).first()
             formacao = Formacao.query.filter_by(descricao=row['formacao']).first()
@@ -192,7 +211,8 @@ def processar_csv(file):
             db.session.add(colaborador)
         db.session.commit()
 
+        logging.info("Arquivo processado e dados inseridos com sucesso.")
         return 'Arquivo enviado e processado com sucesso'
     except Exception as e:
-        print(e)
+        logging.error(f"Erro ao processar o arquivo: {str(e)}", exc_info=True)
         raise Exception(f'Erro ao processar o arquivo: {str(e)}')
