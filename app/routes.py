@@ -728,7 +728,7 @@ def marcar_pesquisa(id):
             # Marca a pesquisa atual como anônima
             pesquisa.is_pesquisa_anonima = is_anonima
 
-        colaboradores = Colaborador.query.filter(Colaborador.ex_funcionario == False).limit(5).all()
+        colaboradores = Colaborador.query.filter(Colaborador.ex_funcionario == False).limit(2).all()
         for colaborador in colaboradores:
             enviar_email(colaborador, pesquisa)
 
