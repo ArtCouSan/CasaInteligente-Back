@@ -3,9 +3,9 @@ flask-cors
 flask-sqlalchemy
 flask-migrate
 pymysql
-openai==1.41.0
-langchain==0.2.14
-langchain-community==0.2.12
+openai
+langchain
+langchain-community
 tiktoken==0.7.0
 faiss-cpu
 langchain-openai
@@ -18,3 +18,4 @@ flask_pymongo
 mysql-connector-python
 faker
 pyspellchecker
+dill

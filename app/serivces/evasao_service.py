@@ -167,7 +167,7 @@ def gerar_dados_colaborador(colaborador):
         'departamento_id': colaborador['departamento']['id'],
         'formacao_id': colaborador['formacao']['id'],
         'cargo_id': colaborador['cargo']['id'],
-        'nivel_do_trabalho': 2,
+        'nivel_do_trabalho':  colaborador['nivelTrabalho'],
         'viagem_trabalho_id': colaborador['viagemTrabalho']['id'],
         'satisfacao_trabalho': respostas.get(1, 0),
         'satisfacao_com_o_ambiente': respostas.get(2, 0),

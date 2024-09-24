@@ -125,9 +125,9 @@ try:
                 quantidade_empresas_trabalhou, quantidade_anos_trabalhados_anteriormente, 
                 nivel_escolaridade_id, ex_funcionario, porcentagem_ultimo_aumento, 
                 distancia_casa, quantidade_anos_atual_gestor, quantidade_anos_na_empresa, 
-                quantidade_horas_treinamento_ano
+                quantidade_horas_treinamento_ano, nivel_trabalho
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
 
             # Gerando valores e passando ao cursor diretamente, sem verificação
@@ -164,7 +164,8 @@ try:
                 row.get('distancia_casa'),  # Pega o distancia_casa diretamente do DataFrame
                 row.get('quantidade_anos_atual_gestor'),  # Pega o quantidade_anos_atual_gestor diretamente do DataFrame
                 row.get('quantidade_anos_na_empresa'),  # Pega o quantidade_anos_na_empresa diretamente do DataFrame
-                row.get('quantidade_horas_treinamento_ano')  # Pega o quantidade_horas_treinamento_ano diretamente do DataFrame
+                row.get('quantidade_horas_treinamento_ano'),  # Pega o quantidade_horas_treinamento_ano diretamente do DataFrame
+                row.get('nivel_do_trabalho')
             )
 
             cursor.execute(inserir_colaborador_query, valores_colaborador)

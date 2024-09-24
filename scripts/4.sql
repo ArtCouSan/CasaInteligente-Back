@@ -40,7 +40,7 @@ INSERT INTO colaborador (
     1,                                   -- Genero (1: Masculino)
     2,                                   -- Estado Civil (2: Casado)
     '11999999999',                       -- Telefone
-    'joao.silva@example.com',            -- Email
+    'rm97804arthur@gmail.com',            -- Email
     '123', -- Senha criptografada gerada (exemplo de hash bcrypt)
     1,                                   -- Formação (1: Ciência da Computação)
     1,                                   -- Faculdade (1: USP)
@@ -130,7 +130,7 @@ INSERT INTO colaborador (
     1,                                   -- Genero (1: Masculino)
     2,                                   -- Estado Civil (2: Casado)
     '11999999999',                       -- Telefone
-    'joao.silva@example.com',            -- Email
+    'rm97804arthur@gmail.com',            -- Email
     '123', -- Senha criptografada gerada (exemplo de hash bcrypt)
     1,                                   -- Formação (1: Ciência da Computação)
     1,                                   -- Faculdade (1: USP)
@@ -218,7 +218,7 @@ INSERT INTO colaborador (
     1,                                   -- Genero (1: Masculino)
     2,                                   -- Estado Civil (2: Casado)
     '11999999999',                       -- Telefone
-    'joao.silva@example.com',            -- Email
+    'rm97804arthur@gmail.com',            -- Email
     '123', -- Senha criptografada gerada (exemplo de hash bcrypt)
     1,                                   -- Formação (1: Ciência da Computação)
     1,                                   -- Faculdade (1: USP)

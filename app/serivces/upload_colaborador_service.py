@@ -205,7 +205,8 @@ def processar_csv(file):
                 distancia_casa=row.get('distanciaCasa', 0),
                 quantidade_anos_atual_gestor=row.get('quantidadeAnosAtualGestor', 0),
                 quantidade_anos_na_empresa=row.get('quantidadeAnosNaEmpresa', 0),
-                quantidade_horas_treinamento_ano=row.get('quantidadeHorasTreinamentoAno', 0)
+                quantidade_horas_treinamento_ano=row.get('quantidadeHorasTreinamentoAno', 0),
+                nivel_trabalho=row.get('nivelTrabalho', 1),
             )
 
             db.session.add(colaborador)

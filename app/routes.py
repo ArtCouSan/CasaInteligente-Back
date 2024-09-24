@@ -109,6 +109,7 @@ def create_colaborador():
         quantidade_anos_na_empresa=data.get('quantidadeAnosNaEmpresa', 0),
         quantidade_horas_treinamento_ano=data.get('quantidadeHorasTreinamentoAno', 0),
         porcentagem_ultimo_aumento=data.get('porcentagemUltimoAumento', 0),
+        nivel_trabalho=data.get('nivelTrabalho', 1),
         senha_hash=123
     )
 
@@ -166,6 +167,7 @@ def update_colaborador(id):
     colaborador.quantidade_anos_na_empresa = data.get('quantidadeAnosNaEmpresa', 0)
     colaborador.quantidade_horas_treinamento_ano =data.get('quantidadeHorasTreinamentoAno', 0)
     colaborador.porcentagem_ultimo_aumento =data.get('porcentagemUltimoAumento', 0)
+    colaborador.nivel_trabalho = data.get('nivelTrabalho', 1),
 
     # Salvar alterações no colaborador
     db.session.commit()

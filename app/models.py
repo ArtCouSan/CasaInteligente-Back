@@ -131,14 +131,14 @@ class Colaborador(db.Model):
     quantidade_empresas_trabalhou = db.Column(db.Integer, default=0)
     quantidade_anos_trabalhados_anteriormente = db.Column(db.Integer, default=0)
     nivel_escolaridade_id = db.Column(db.Integer, db.ForeignKey('nivel_escolaridade.id'), nullable=True)
-
     porcentagem_ultimo_aumento = db.Column(db.Integer, default=0)
     distancia_casa = db.Column(db.Integer, default=0) 
     quantidade_anos_atual_gestor = db.Column(db.Integer, default=0)
     quantidade_anos_na_empresa = db.Column(db.Integer, default=0)
     quantidade_horas_treinamento_ano = db.Column(db.Integer, default=0)
-
     ex_funcionario = db.Column(db.Boolean, default=False)
+
+    nivel_trabalho = db.Column(db.Integer, default=1)
 
     genero = db.relationship('Genero', backref='colaboradores')
     estado_civil = db.relationship('EstadoCivil', backref='colaboradores')
@@ -188,6 +188,7 @@ class Colaborador(db.Model):
             'quantidadeHorasTreinamentoAno': self.quantidade_horas_treinamento_ano,
             'porcentagemUltimoAumento': self.porcentagem_ultimo_aumento,
             'exFuncionario': self.ex_funcionario,
+            'nivelTrabalho': self.nivel_trabalho,
             'perfis': [perfil.to_dict() for perfil in self.perfis],
             'respostas_anonima': [resposta.to_dict() for resposta in self.respostas_anonima],
             'respostas_fechada': [resposta.to_dict() for resposta in self.respostas_fechada]
@@ -216,6 +217,7 @@ class Colaborador(db.Model):
             'nivelEscolaridade': {'descricao': self.nivel_escolaridade.descricao},
             'exFuncionario': self.ex_funcionario,
             'distanciaCasa': self.distancia_casa,
+            'nivelTrabalho': self.nivel_trabalho,
             'quantidadeAnosAtualGestor': self.quantidade_anos_atual_gestor,
             'quantidadeAnosNaEmpresa': self.quantidade_anos_na_empresa,
             'quantidadeHorasTreinamentoAno': self.quantidade_horas_treinamento_ano,

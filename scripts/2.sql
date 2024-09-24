@@ -80,6 +80,7 @@ CREATE TABLE colaborador (
     nivel_escolaridade_id INT DEFAULT NULL,
     ex_funcionario TINYINT(1) DEFAULT 0,  
     viagem_trabalho_id INT DEFAULT NULL,     
+    nivel_trabalho INT DEFAULT 1,
     
     porcentagem_ultimo_aumento INT DEFAULT NULL,
     distancia_casa INT DEFAULT NULL, 

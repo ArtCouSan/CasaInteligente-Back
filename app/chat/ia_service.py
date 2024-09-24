@@ -1,6 +1,6 @@
 import os
 import json
-import pickle
+import dill as pickle
 import openai
 from openai import OpenAI
 from langchain_community.vectorstores import FAISS
