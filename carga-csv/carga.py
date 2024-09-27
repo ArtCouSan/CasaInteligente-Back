@@ -1,8 +1,11 @@
+from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import mysql.connector
 from mysql.connector import Error
 import random
 from faker import Faker
+import time
+import psutil  # Importa o psutil para monitoramento do sistema
 
 fake = Faker('pt_BR')
 
@@ -17,13 +20,9 @@ def gerar_cpf():
         resto = 11 - s % 11
         return resto if resto < 10 else 0
 
-    # Gerar os primeiros 9 dígitos do CPF
     cpf = [random.randint(0, 9) for _ in range(9)]
-    # Calcular o primeiro dígito verificador
     cpf.append(calcula_digito(cpf))
-    # Calcular o segundo dígito verificador
     cpf.append(calcula_digito(cpf))
-    # Formatar o CPF no padrão XXX.XXX.XXX-XX
     return "{}{}{}.{}{}{}.{}{}{}-{}{}".format(*cpf)
 
 # Função para gerar um nome aleatório
@@ -70,50 +69,48 @@ respostas_map = {
     }
 }
 
-# Conectar ao MySQL
-try:
-    connection = mysql.connector.connect(
-        host='localhost',
-        database='colaborador_db',
-        user='sdc',  # Substitua pelo seu usuário
-        password='sdc'  # Substitua pela sua senha
-    )
+# Função para inserir colaborador e seus dados relacionados
+def inserir_colaborador(row):
+    try:
+        connection = mysql.connector.connect(
+            host='localhost',
+            database='colaborador_db',
+            user='sdc',  # Substitua pelo seu usuário
+            password='sdc'  # Substitua pela sua senha
+        )
 
-    if connection.is_connected():
-        cursor = connection.cursor(dictionary=True)
+        if connection.is_connected():
+            cursor = connection.cursor(dictionary=True)
 
-        # Obter o ID da pesquisa e das perguntas
-        cursor.execute("SELECT id FROM pesquisa WHERE titulo = 'Pesquisa de Satisfação no Trabalho'")
-        pesquisa = cursor.fetchone()
-        pesquisa_id = pesquisa['id']
+            # Obter o ID da pesquisa e das perguntas
+            cursor.execute("SELECT id FROM pesquisa WHERE titulo = 'Pulso 1'")
+            pesquisa = cursor.fetchone()
+            pesquisa_id = pesquisa['id']
 
-        # Obter os IDs das perguntas
-        cursor.execute("SELECT id, texto FROM pergunta WHERE id IN (SELECT pergunta_id FROM pesquisa_pergunta WHERE pesquisa_id = %s)", (pesquisa_id,))
-        perguntas = cursor.fetchall()
+            # Obter os IDs das perguntas
+            cursor.execute("SELECT id, texto FROM pergunta WHERE id IN (SELECT pergunta_id FROM pesquisa_pergunta WHERE pesquisa_id = %s)", (pesquisa_id,))
+            perguntas = cursor.fetchall()
 
-        pergunta_ids = {
-            'satisfacao_trabalho': None,
-            'satisfacao_com_o_ambiente': None,
-            'envolvimento_no_trabalho': None,
-            'satisfacao_com_relacionamento': None,
-            'equilibrio_trabalho_vida': None
-        }
+            pergunta_ids = {
+                'satisfacao_trabalho': None,
+                'satisfacao_com_o_ambiente': None,
+                'envolvimento_no_trabalho': None,
+                'satisfacao_com_relacionamento': None,
+                'equilibrio_trabalho_vida': None
+            }
 
-        # Mapeando perguntas para variáveis
-        for pergunta in perguntas:
-            if 'satisfação no trabalho' in pergunta['texto'].lower():
-                pergunta_ids['satisfacao_trabalho'] = pergunta['id']
-            elif 'satisfação com o ambiente' in pergunta['texto'].lower():
-                pergunta_ids['satisfacao_com_o_ambiente'] = pergunta['id']
-            elif 'envolvimento com o trabalho' in pergunta['texto'].lower():
-                pergunta_ids['envolvimento_no_trabalho'] = pergunta['id']
-            elif 'satisfação com o relacionamento' in pergunta['texto'].lower():
-                pergunta_ids['satisfacao_com_relacionamento'] = pergunta['id']
-            elif 'equilíbrio entre trabalho e vida' in pergunta['texto'].lower():
-                pergunta_ids['equilibrio_trabalho_vida'] = pergunta['id']
-
-        # Iterar sobre o DataFrame e inserir os dados
-        for _, row in colaboradores_df.iterrows():
+            # Mapeando perguntas para variáveis
+            for pergunta in perguntas:
+                if 'satisfação no trabalho' in pergunta['texto'].lower():
+                    pergunta_ids['satisfacao_trabalho'] = pergunta['id']
+                elif 'satisfação com o ambiente' in pergunta['texto'].lower():
+                    pergunta_ids['satisfacao_com_o_ambiente'] = pergunta['id']
+                elif 'envolvimento com o trabalho' in pergunta['texto'].lower():
+                    pergunta_ids['envolvimento_no_trabalho'] = pergunta['id']
+                elif 'satisfação com o relacionamento' in pergunta['texto'].lower():
+                    pergunta_ids['satisfacao_com_relacionamento'] = pergunta['id']
+                elif 'equilíbrio entre trabalho e vida' in pergunta['texto'].lower():
+                    pergunta_ids['equilibrio_trabalho_vida'] = pergunta['id']
 
             # Inserir o colaborador na tabela colaborador
             inserir_colaborador_query = """
@@ -129,42 +126,40 @@ try:
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-
-            # Gerando valores e passando ao cursor diretamente, sem verificação
             valores_colaborador = (
                 gerar_nome(),  # Gera um nome aleatório
                 gerar_cpf(),   # Gera um CPF aleatório
-                row.get('idade'),  # Pega a idade diretamente do DataFrame
-                row.get('genero_id'),  # Pega o genero_id diretamente do DataFrame
-                row.get('estado_civil_id'),  # Pega o estado_civil_id diretamente do DataFrame
-                row.get('telefone', ''),  # Pega o telefone, com valor padrão como string vazia se não existir
-                'rm97804arthur@gmail.com',  # Pega o email, com valor padrão como string vazia se não existir
+                row.get('idade'),
+                row.get('genero_id'),
+                row.get('estado_civil_id'),
+                row.get('telefone', ''),
+                'rm97804arthur@gmail.com',
                 '123',  # senha_hash fixo
-                row.get('formacao_id'),  # Pega o formacao_id diretamente do DataFrame
-                row.get('faculdade_id', 1),  # Pega o faculdade_id, com valor padrão 1 se não existir
-                row.get('endereco', ''),  # Pega o endereco, com valor padrão como string vazia se não existir
-                row.get('numero', ''),  # Pega o numero, com valor padrão como string vazia se não existir
-                row.get('complemento', ''),  # Pega o complemento, com valor padrão como string vazia se não existir
-                row.get('bairro', ''),  # Pega o bairro, com valor padrão como string vazia se não existir
-                row.get('cidade', ''),  # Pega a cidade, com valor padrão como string vazia se não existir
-                row.get('estado', ''),  # Pega o estado, com valor padrão como string vazia se não existir
-                row.get('cep', ''),  # Pega o cep, com valor padrão como string vazia se não existir
-                row.get('departamento_id'),  # Pega o departamento_id diretamente do DataFrame
-                row.get('setor_id', 1),  # Pega o setor_id, com valor padrão 1 se não existir
-                row.get('viagem_trabalho_id'),  # Pega o viagem_trabalho_id, com valor padrão 0 se não existir
-                row.get('salario'),  # Pega o salario diretamente do DataFrame
-                row.get('cargo_id'),  # Pega o cargo_id diretamente do DataFrame
-                row.get('gerente', ''),  # Pega o gerente, com valor padrão como string vazia se não existir
-                row.get('tempo_trabalho'),  # Pega o tempo_trabalho diretamente do DataFrame
-                row.get('quantidade_empresas_trabalhou'),  # Pega o quantidade_empresas_trabalhou diretamente do DataFrame
-                row.get('quantidade_anos_trabalhados_anteriormente'),  # Pega o quantidade_anos_trabalhados_anteriormente diretamente do DataFrame
-                row.get('nivel_escolaridade_id'),  # Pega o nivel_escolaridade_id diretamente do DataFrame
-                row.get('ex_funcionario', 0),  # Pega o ex_funcionario, com valor padrão 0 se não existir
-                row.get('porcentagem_ultimo_aumento'),  # Pega o porcentagem_ultimo_aumento diretamente do DataFrame
-                row.get('distancia_casa'),  # Pega o distancia_casa diretamente do DataFrame
-                row.get('quantidade_anos_atual_gestor'),  # Pega o quantidade_anos_atual_gestor diretamente do DataFrame
-                row.get('quantidade_anos_na_empresa'),  # Pega o quantidade_anos_na_empresa diretamente do DataFrame
-                row.get('quantidade_horas_treinamento_ano'),  # Pega o quantidade_horas_treinamento_ano diretamente do DataFrame
+                row.get('formacao_id'),
+                row.get('faculdade_id', 1),
+                row.get('endereco', ''),
+                row.get('numero', ''),
+                row.get('complemento', ''),
+                row.get('bairro', ''),
+                row.get('cidade', ''),
+                row.get('estado', ''),
+                row.get('cep', ''),
+                row.get('departamento_id'),
+                row.get('setor_id', 1),
+                row.get('viagem_trabalho_id'),
+                row.get('salario'),
+                row.get('cargo_id'),
+                row.get('gerente', ''),
+                row.get('tempo_trabalho'),
+                row.get('quantidade_empresas_trabalhou'),
+                row.get('quantidade_anos_trabalhados_anteriormente'),
+                row.get('nivel_escolaridade_id'),
+                row.get('ex_funcionario', 0),
+                row.get('porcentagem_ultimo_aumento'),
+                row.get('distancia_casa'),
+                row.get('quantidade_anos_atual_gestor'),
+                row.get('quantidade_anos_na_empresa'),
+                row.get('quantidade_horas_treinamento_ano'),
                 row.get('nivel_do_trabalho')
             )
 
@@ -226,15 +221,57 @@ try:
                         resposta_nota
                     ))
 
-        # Confirmar as alterações
-        connection.commit()
-        print("Colaboradores e respostas inseridos com sucesso!")
+            # Confirmar as alterações
+            connection.commit()
+            print(f"Colaborador {colaborador_id} e respostas inseridos com sucesso!")
 
-except Error as e:
-    print(f"Erro ao conectar ao MySQL: {e}")
+    except Error as e:
+        print(f"Erro ao conectar ao MySQL: {e}")
 
-finally:
-    if connection.is_connected():
-        cursor.close()
-        connection.close()
-        print("Conexão ao MySQL foi encerrada.")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+# Função para medir o uso de recursos do sistema
+def medir_recursos():
+    cpu_percent = psutil.cpu_percent(interval=1)
+    memoria = psutil.virtual_memory()
+    uso_memoria = memoria.percent
+    memoria_usada = memoria.used / (1024 ** 3)  # Convertendo para GB
+    memoria_disponivel = memoria.available / (1024 ** 3)  # Convertendo para GB
+    return cpu_percent, uso_memoria, memoria_usada, memoria_disponivel
+
+# Coletar informações antes do processamento
+cpu_inicial, uso_mem_inicial, mem_usada_inicial, mem_disp_inicial = medir_recursos()
+
+# Tempo inicial
+tempo_inicial = time.time()
+
+# Usar ThreadPoolExecutor para paralelizar a inserção dos colaboradores
+with ThreadPoolExecutor(max_workers=4) as executor:  # Ajuste max_workers conforme o número de núcleos disponíveis
+    executor.map(inserir_colaborador, [row for _, row in colaboradores_df.iterrows()])
+
+# Tempo final
+tempo_final = time.time()
+
+# Coletar informações após o processamento
+cpu_final, uso_mem_final, mem_usada_final, mem_disp_final = medir_recursos()
+
+# Cálculo do tempo de execução
+tempo_execucao = tempo_final - tempo_inicial
+
+# Impressão dos resultados
+print(f"Tempo de execução: {tempo_execucao:.2f} segundos")
+
+print("Uso de CPU antes do processamento: {:.2f}%".format(cpu_inicial))
+print("Uso de CPU após o processamento: {:.2f}%".format(cpu_final))
+
+print("Uso de memória antes do processamento: {:.2f}%".format(uso_mem_inicial))
+print("Uso de memória após o processamento: {:.2f}%".format(uso_mem_final))
+
+print("Memória usada antes do processamento: {:.2f} GB".format(mem_usada_inicial))
+print("Memória usada após o processamento: {:.2f} GB".format(mem_usada_final))
+
+print("Memória disponível antes do processamento: {:.2f} GB".format(mem_disp_inicial))
+print("Memória disponível após o processamento: {:.2f} GB".format(mem_disp_final))

@@ -14,40 +14,40 @@ with open('config.json', 'r') as file:
     os.environ['OPENAI_API_KEY'] = config.get('OPENAI_API_KEY')
 
 # Define o caminho relativo para a pasta 'splits' dentro do projeto
-current_directory = os.getcwd()
-splits_directory = os.path.join(current_directory, r"app\chat\splits")
-splits_filepath = os.path.join(splits_directory, 'splits.pkl')
-faiss_directory = os.path.join(current_directory, r"app\chat\faiss_index")
+# current_directory = os.getcwd()
+# splits_directory = os.path.join(current_directory, r"app\chat\splits")
+# splits_filepath = os.path.join(splits_directory, 'splits.pkl')
+# faiss_directory = os.path.join(current_directory, r"app\chat\faiss_index")
 
 # Função para carregar os splits com tratamento de erros
-def load_splits(filepath):
-    try:
-        with open(filepath, 'rb') as file:
-            splits = pickle.load(file)
-        return splits
-    except FileNotFoundError:
-        print(f"Arquivo '{filepath}' não encontrado. Verifique o caminho.")
-        exit(1)
-    except pickle.UnpicklingError:
-        print(f"Erro ao deserializar o arquivo '{filepath}'.")
-        exit(1)
-    except Exception as e:
-        print(f"Erro desconhecido ao carregar '{filepath}': {str(e)}")
-        exit(1)
+# def load_splits(filepath):
+#     try:
+#         with open(filepath, 'rb') as file:
+#             splits = pickle.load(file)
+#         return splits
+#     except FileNotFoundError:
+#         print(f"Arquivo '{filepath}' não encontrado. Verifique o caminho.")
+#         exit(1)
+#     except pickle.UnpicklingError:
+#         print(f"Erro ao deserializar o arquivo '{filepath}'.")
+#         exit(1)
+#     except Exception as e:
+#         print(f"Erro desconhecido ao carregar '{filepath}': {str(e)}")
+#         exit(1)
         
-# Carregar os splits usando o caminho relativo
-splits = load_splits(splits_filepath)
+# # Carregar os splits usando o caminho relativo
+# splits = load_splits(splits_filepath)
 
-# Definindo os embeddings antes de carregar o FAISS
-embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+# # Definindo os embeddings antes de carregar o FAISS
+# embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
-# Carregando o índice FAISS localmente
-faiss_db = FAISS.load_local(faiss_directory, embeddings, allow_dangerous_deserialization=True)
+# # Carregando o índice FAISS localmente
+# faiss_db = FAISS.load_local(faiss_directory, embeddings, allow_dangerous_deserialization=True)
 
-# Criar o retriever a partir do faiss_db
-retriever = faiss_db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+# # Criar o retriever a partir do faiss_db
+# retriever = faiss_db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
-client = OpenAI()
+# client = OpenAI()
 
 def fazer_pergunta(query, colaborador_id, num_messages=5):
     # Recuperar as últimas mensagens do colaborador específico no MongoDB

@@ -80,18 +80,34 @@ INSERT INTO cargo (nome) VALUES
 ('Diretor de Pesquisa'),
 ('Recursos Humanos');
 
--- Inserir a pesquisa
+-- Inserir a pesquisa Pulso 1
 INSERT INTO pesquisa (titulo, descricao, ano)
-VALUES ('Pesquisa de Satisfação no Trabalho', 'Avaliação de diferentes aspectos do trabalho', 2024);
-
+VALUES ('Pulso 1', 'Avaliação de diferentes aspectos do trabalho - Pulso 1', 2024);
 -- Obter o ID da pesquisa criada
-SET @pesquisa_id = LAST_INSERT_ID();
+SET @pesquisa_id1 = LAST_INSERT_ID();
+
+-- Inserir a pesquisa Pulso 2
+INSERT INTO pesquisa (titulo, descricao, ano)
+VALUES ('Pulso 2', 'Avaliação de diferentes aspectos do trabalho - Pulso 2', 2024);
+-- Obter o ID da pesquisa criada
+SET @pesquisa_id2 = LAST_INSERT_ID();
+
+-- Inserir a pesquisa Pulso 3
+INSERT INTO pesquisa (titulo, descricao, ano)
+VALUES ('Pulso 3', 'Avaliação de diferentes aspectos do trabalho - Pulso 3', 2024);
+-- Obter o ID da pesquisa criada
+SET @pesquisa_id3 = LAST_INSERT_ID();
+
+
+-- Inserir perguntas e associá-las às pesquisas
 
 -- 1. Pergunta: Satisfação no Trabalho
 INSERT INTO pergunta (texto) VALUES ('Qual é o seu nível de satisfação no trabalho?');
 SET @pergunta_satisfacao_trabalho = LAST_INSERT_ID();
 INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
-VALUES (@pesquisa_id, @pergunta_satisfacao_trabalho);
+VALUES (@pesquisa_id1, @pergunta_satisfacao_trabalho),
+       (@pesquisa_id2, @pergunta_satisfacao_trabalho),
+       (@pesquisa_id3, @pergunta_satisfacao_trabalho);
 INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 (@pergunta_satisfacao_trabalho, 'Baixa', 1),
 (@pergunta_satisfacao_trabalho, 'Média', 2),
@@ -102,7 +118,9 @@ INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 INSERT INTO pergunta (texto) VALUES ('Como você avalia a sua satisfação com o ambiente de trabalho?');
 SET @pergunta_satisfacao_ambiente = LAST_INSERT_ID();
 INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
-VALUES (@pesquisa_id, @pergunta_satisfacao_ambiente);
+VALUES (@pesquisa_id1, @pergunta_satisfacao_ambiente),
+       (@pesquisa_id2, @pergunta_satisfacao_ambiente),
+       (@pesquisa_id3, @pergunta_satisfacao_ambiente);
 INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 (@pergunta_satisfacao_ambiente, 'Baixa', 1),
 (@pergunta_satisfacao_ambiente, 'Média', 2),
@@ -113,7 +131,9 @@ INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 INSERT INTO pergunta (texto) VALUES ('Qual é o seu nível de envolvimento com o trabalho?');
 SET @pergunta_envolvimento_trabalho = LAST_INSERT_ID();
 INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
-VALUES (@pesquisa_id, @pergunta_envolvimento_trabalho);
+VALUES (@pesquisa_id1, @pergunta_envolvimento_trabalho),
+       (@pesquisa_id2, @pergunta_envolvimento_trabalho),
+       (@pesquisa_id3, @pergunta_envolvimento_trabalho);
 INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 (@pergunta_envolvimento_trabalho, 'Baixo', 1),
 (@pergunta_envolvimento_trabalho, 'Médio', 2),
@@ -124,7 +144,9 @@ INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 INSERT INTO pergunta (texto) VALUES ('Como você avalia a sua satisfação com o relacionamento com colegas e gestores?');
 SET @pergunta_satisfacao_relacionamento = LAST_INSERT_ID();
 INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
-VALUES (@pesquisa_id, @pergunta_satisfacao_relacionamento);
+VALUES (@pesquisa_id1, @pergunta_satisfacao_relacionamento),
+       (@pesquisa_id2, @pergunta_satisfacao_relacionamento),
+       (@pesquisa_id3, @pergunta_satisfacao_relacionamento);
 INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 (@pergunta_satisfacao_relacionamento, 'Baixa', 1),
 (@pergunta_satisfacao_relacionamento, 'Média', 2),
@@ -135,12 +157,15 @@ INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 INSERT INTO pergunta (texto) VALUES ('Como você avalia o equilíbrio entre trabalho e vida pessoal?');
 SET @pergunta_equilibrio_trabalho_vida = LAST_INSERT_ID();
 INSERT INTO pesquisa_pergunta (pesquisa_id, pergunta_id) 
-VALUES (@pesquisa_id, @pergunta_equilibrio_trabalho_vida);
+VALUES (@pesquisa_id1, @pergunta_equilibrio_trabalho_vida),
+       (@pesquisa_id2, @pergunta_equilibrio_trabalho_vida),
+       (@pesquisa_id3, @pergunta_equilibrio_trabalho_vida);
 INSERT INTO resposta_opcao (pergunta_id, texto, nota) VALUES
 (@pergunta_equilibrio_trabalho_vida, 'Ruim', 1),
 (@pergunta_equilibrio_trabalho_vida, 'Bom', 2),
 (@pergunta_equilibrio_trabalho_vida, 'Melhor', 3),
 (@pergunta_equilibrio_trabalho_vida, 'Ótimo', 4);
+
 
 INSERT INTO perfil(nome) VALUES
 ('colaborador'),

@@ -19,3 +19,4 @@ mysql-connector-python
 faker
 pyspellchecker
 dill
+psutil
