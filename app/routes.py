@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request, session
+import time
+from flask import Blueprint, jsonify, request, session, current_app
 from pymysql import IntegrityError
 from sqlalchemy import asc, desc, func 
 from app.serivces.email_service import enviar_email
@@ -15,10 +16,19 @@ from flask import send_file
 import os
 from math import ceil
 from sqlalchemy.orm import joinedload
+from concurrent.futures import ThreadPoolExecutor
+import psutil
 
 bp = Blueprint('colaborador', __name__)
 
-from sqlalchemy.orm import joinedload
+# Função para medir o uso de recursos do sistema
+def medir_recursos():
+    cpu_percent = psutil.cpu_percent(interval=1)
+    memoria = psutil.virtual_memory()
+    uso_memoria = memoria.percent
+    memoria_usada = memoria.used / (1024 ** 3)  # Convertendo para GB
+    memoria_disponivel = memoria.available / (1024 ** 3)  # Convertendo para GB
+    return cpu_percent, uso_memoria, memoria_usada, memoria_disponivel
 
 @bp.route('/colaboradores', methods=['GET'])
 def get_colaboradores():
@@ -872,8 +882,96 @@ def recarregar_evasao_colaborador(colaborador_id):
     
     return jsonify({'sucesso': 'Atualizado evasao'}), 200
 
+def verificar_evasao_com_contexto(app, colaborador):
+    """
+    Função auxiliar para garantir que cada thread tenha o contexto da aplicação.
+    Aceita a instância da aplicação Flask como argumento.
+    """
+    with app.app_context():
+        return verificar_evasao_colaborador(colaborador)
+
+@bp.route('/analise-colaborador/v2/recarregar-todas-evasoes', methods=['GET'])
+def recarregar_evasao_todos_colaboradores_v2():
+    # Coletar informações de recursos antes do processamento
+    cpu_inicial, uso_mem_inicial, mem_usada_inicial, mem_disp_inicial = medir_recursos()
+    
+    # Tempo inicial
+    tempo_inicial = time.time()
+    
+    # Imprimir no console os recursos antes do processamento
+    print("Recursos antes do processamento:")
+    print(f"Uso de CPU: {cpu_inicial:.2f}%")
+    print(f"Uso de memória: {uso_mem_inicial:.2f}%")
+    print(f"Memória usada: {mem_usada_inicial:.2f} GB")
+    print(f"Memória disponível: {mem_disp_inicial:.2f} GB")
+    
+    # Buscar todos os colaboradores no banco de dados
+    # Buscar todos os colaboradores no banco de dados com os dados relacionados carregados
+    colaboradores_ativos = (
+        Colaborador.query
+        .filter_by(ex_funcionario=False)
+        .options(
+            joinedload(Colaborador.genero),
+            joinedload(Colaborador.cargo),
+            joinedload(Colaborador.departamento),
+            joinedload(Colaborador.estado_civil),
+            joinedload(Colaborador.formacao),
+            joinedload(Colaborador.viagem_trabalho),
+            joinedload(Colaborador.faculdade),
+            joinedload(Colaborador.nivel_escolaridade),
+            joinedload(Colaborador.setor),
+            joinedload(Colaborador.perfis),
+            joinedload(Colaborador.respostas_anonima),
+            joinedload(Colaborador.respostas_fechada),
+        )
+        .all()
+    )
+
+    # Capturar a instância da aplicação atual
+    app = current_app._get_current_object()
+
+    # Utilizar ThreadPoolExecutor para paralelizar a análise de evasão com contexto da aplicação
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        # Garantir que o contexto da aplicação seja passado para cada thread
+        resultados = list(executor.map(lambda colaborador: verificar_evasao_com_contexto(app, colaborador.to_dict()), colaboradores_ativos))
+
+    # Commit de todas as alterações
+    db.session.commit()
+
+    # Tempo final
+    tempo_final = time.time()
+
+    # Coletar informações de recursos após o processamento
+    cpu_final, uso_mem_final, mem_usada_final, mem_disp_final = medir_recursos()
+
+    # Cálculo do tempo de execução
+    tempo_execucao = tempo_final - tempo_inicial
+
+    # Imprimir no console os recursos após o processamento
+    print(f"\nTempo de execução: {tempo_execucao:.2f} segundos")
+
+    print("Recursos após o processamento:")
+    print(f"Uso de CPU: {cpu_final:.2f}%")
+    print(f"Uso de memória: {uso_mem_final:.2f}%")
+    print(f"Memória usada: {mem_usada_final:.2f} GB")
+    print(f"Memória disponível: {mem_disp_final:.2f} GB")
+    
+    return jsonify({'sucesso': 'Análise de evasão atualizada para todos os colaboradores'}), 200
 @bp.route('/analise-colaborador/recarregar-todas-evasoes', methods=['GET'])
 def recarregar_evasao_todos_colaboradores():
+# Coletar informações de recursos antes do processamento
+    cpu_inicial, uso_mem_inicial, mem_usada_inicial, mem_disp_inicial = medir_recursos()
+    
+    # Tempo inicial
+    tempo_inicial = time.time()
+    
+    # Imprimir no console os recursos antes do processamento
+    print("Recursos antes do processamento:")
+    print(f"Uso de CPU: {cpu_inicial:.2f}%")
+    print(f"Uso de memória: {uso_mem_inicial:.2f}%")
+    print(f"Memória usada: {mem_usada_inicial:.2f} GB")
+    print(f"Memória disponível: {mem_disp_inicial:.2f} GB")
+    
     # Buscar todos os colaboradores no banco de dados
     colaboradores_ativos = Colaborador.query.filter_by(ex_funcionario=False).all()
     
@@ -887,9 +985,27 @@ def recarregar_evasao_todos_colaboradores():
     
     # Commit de todas as alterações
     db.session.commit()
+
+    # Tempo final
+    tempo_final = time.time()
+
+    # Coletar informações de recursos após o processamento
+    cpu_final, uso_mem_final, mem_usada_final, mem_disp_final = medir_recursos()
+
+    # Cálculo do tempo de execução
+    tempo_execucao = tempo_final - tempo_inicial
+
+    # Imprimir no console os recursos após o processamento
+    print(f"\nTempo de execução: {tempo_execucao:.2f} segundos")
+
+    print("Recursos após o processamento:")
+    print(f"Uso de CPU: {cpu_final:.2f}%")
+    print(f"Uso de memória: {uso_mem_final:.2f}%")
+    print(f"Memória usada: {mem_usada_final:.2f} GB")
+    print(f"Memória disponível: {mem_disp_final:.2f} GB")
     
     return jsonify({'sucesso': 'Análise de evasão atualizada para todos os colaboradores'}), 200
-    
+
 @bp.route('/termometro/<int:contexto_id>', methods=['GET'])
 def analisar_respostas_por_contexto_especifico(contexto_id):
     try:
