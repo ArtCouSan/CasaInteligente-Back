@@ -145,4 +145,8 @@ for _, row in colaboradores_df.iterrows():
             respostas.append(resposta)
             respostas_anonimas.append(resposta)
 
-print("Dados simulados inseridos com sucesso!")
+# Mostrar o total de registros inseridos
+print(f"Total de colaboradores inseridos: {len(colaboradores)}")
+print(f"Total de predições inseridas: {len(predicoes)}")
+print(f"Total de respostas fechadas inseridas: {len(respostas)}")
+print(f"Total de respostas anônimas inseridas: {len(respostas_anonimas)}")
